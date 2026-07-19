@@ -7,21 +7,22 @@ public interface IEnrollmentService
     Task<bool> DeleteAsync(string id);
 }
 
-// --- The in-memory implementation ---
+// --- The implementation (scoped service, singleton-backed store) ---
 public class EnrollmentService : IEnrollmentService
 {
-    private readonly Dictionary<string, EnrollmentRecord> _store = new();
+    private readonly EnrollmentStore _store;
     private readonly ILogger<EnrollmentService> _logger;
 
-    public EnrollmentService(ILogger<EnrollmentService> logger)
+    public EnrollmentService(EnrollmentStore store, ILogger<EnrollmentService> logger)
     {
+        _store = store;
         _logger = logger;
     }
 
     public Task<EnrollmentRecord> EnrollAsync(string studentId, string courseCode)
     {
         // Check for duplicate enrollment
-        var existing = _store.Values
+        var existing = _store.Data.Values
             .FirstOrDefault(e => e.StudentId == studentId && e.CourseCode == courseCode);
 
         if (existing is not null)
@@ -34,7 +35,7 @@ public class EnrollmentService : IEnrollmentService
 
         var id = Guid.NewGuid().ToString("N")[..8];
         var record = new EnrollmentRecord(id, studentId, courseCode, DateTime.UtcNow);
-        _store[id] = record;
+        _store.Data[id] = record;
 
         _logger.LogInformation(
             "Enrolled {StudentId} in {CourseCode} record {EnrollmentId}",
@@ -45,7 +46,7 @@ public class EnrollmentService : IEnrollmentService
 
     public Task<EnrollmentRecord?> GetByIdAsync(string id)
     {
-        _store.TryGetValue(id, out var record);
+        _store.Data.TryGetValue(id, out var record);
 
         if (record is null)
         {
@@ -57,13 +58,13 @@ public class EnrollmentService : IEnrollmentService
 
     public Task<IReadOnlyList<EnrollmentRecord>> GetAllAsync()
     {
-        IReadOnlyList<EnrollmentRecord> all = _store.Values.ToList();
+        IReadOnlyList<EnrollmentRecord> all = _store.Data.Values.ToList();
         return Task.FromResult(all);
     }
 
     public Task<bool> DeleteAsync(string id)
     {
-        var removed = _store.Remove(id);
+        var removed = _store.Data.Remove(id);
 
         if (removed)
             _logger.LogInformation("Deleted enrollment {EnrollmentId}", id);

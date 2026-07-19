@@ -1,15 +1,18 @@
 var builder = WebApplication.CreateBuilder(args);
 
-// Services: add authentication / authorization services
 builder.Services
     .AddAuthentication("Training")
     .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions,
         TrainingAuthHandler>("Training", null);
 builder.Services.AddAuthorization();
 builder.Services.AddProblemDetails();
-
 builder.Services.AddSingleton<EnrollmentWorker>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
+builder.Services.AddOptions<PaymentOptions>()
+    .BindConfiguration("Payments")
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+builder.Services.AddControllers();
 
 builder.Host.UseDefaultServiceProvider(options =>
 {
@@ -17,11 +20,9 @@ builder.Host.UseDefaultServiceProvider(options =>
     options.ValidateOnBuild = true;
 });
 
-builder.Services.AddOptions<PaymentOptions>()
-    .BindConfiguration("Payments")
-    .ValidateDataAnnotations()
-    .ValidateOnStart();
-
+builder.Services.AddSingleton<EnrollmentStore>();
+builder.Services.AddSingleton<EnrollmentWorker>();
+builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 
 var app = builder.Build();
 
@@ -32,6 +33,8 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapControllers();
+
 app.MapGet("/api/assessments/results", () => Results.Ok(new
 {
     courseCode = "CS-101",
@@ -39,6 +42,5 @@ app.MapGet("/api/assessments/results", () => Results.Ok(new
     letterGrade = "A"
 }))
 .RequireAuthorization();
-
 
 app.Run();

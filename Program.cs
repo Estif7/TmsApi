@@ -8,6 +8,16 @@ builder.Services
 builder.Services.AddAuthorization();
 builder.Services.AddProblemDetails();
 
+builder.Services.AddSingleton<EnrollmentWorker>();
+builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
+
+builder.Host.UseDefaultServiceProvider(options =>
+{
+    options.ValidateScopes = true;
+    options.ValidateOnBuild = true;
+});
+
+
 var app = builder.Build();
 
 app.UseMiddleware<RequestLoggingMiddleware>();
@@ -24,5 +34,6 @@ app.MapGet("/api/assessments/results", () => Results.Ok(new
     letterGrade = "A"
 }))
 .RequireAuthorization();
+
 
 app.Run();

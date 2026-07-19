@@ -5,7 +5,18 @@ builder.Services
     .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions,
         TrainingAuthHandler>("Training", null);
 builder.Services.AddAuthorization();
-builder.Services.AddProblemDetails();
+
+builder.Services.AddProblemDetails(options =>
+{
+    options.CustomizeProblemDetails = context =>
+    {
+        if (context.Exception is not null)
+        {
+            context.ProblemDetails.Detail = context.Exception.Message;
+        }
+    };
+});
+
 builder.Services.AddSingleton<EnrollmentWorker>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 builder.Services.AddOptions<PaymentOptions>()
@@ -28,6 +39,7 @@ var app = builder.Build();
 
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseExceptionHandler();
+app.UseStatusCodePages();
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthentication();
@@ -42,5 +54,10 @@ app.MapGet("/api/assessments/results", () => Results.Ok(new
     letterGrade = "A"
 }))
 .RequireAuthorization();
+
+app.MapGet("/api/error", () =>
+{
+    throw new TmsDatabaseException("Simulated database failure for ProblemDetails testing");
+});
 
 app.Run();

@@ -77,4 +77,36 @@ public class ReportsController(TmsDbContext context) : ControllerBase
 
         return Ok(list);
     }
+
+    // Paged student list — page size 20, stable sort by name before Skip/Take
+    [HttpGet("students-paged")]
+    public async Task<IActionResult> StudentsPaged(int page = 1, CancellationToken cancellationToken = default)
+    {
+        const int pageSize = 20;
+
+        var students = await context.Students
+            .OrderBy(s => s.Name)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return Ok(students);
+    }
+
+    // Top 5 courses by enrollment count
+    [HttpGet("top-courses")]
+    public async Task<IActionResult> TopCourses(CancellationToken cancellationToken = default)
+    {
+        var list = await context.Courses
+            .Select(c => new
+            {
+                c.Title,
+                EnrollmentCount = c.Enrollments.Count
+            })
+            .OrderByDescending(x => x.EnrollmentCount)
+            .Take(5)
+            .ToListAsync(cancellationToken);
+
+        return Ok(list);
+    }
 }

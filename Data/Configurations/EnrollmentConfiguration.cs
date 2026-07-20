@@ -24,5 +24,9 @@ public class EnrollmentConfiguration : IEntityTypeConfiguration<Enrollment>
             .WithMany(s => s.Enrollments)
             .HasForeignKey(e => e.StudentId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Matches Student's soft-delete filter — an enrollment whose student
+        // is soft-deleted should not surface in normal queries either.
+        builder.HasQueryFilter(e => !e.Student.IsDeleted);
     }
 }

@@ -20,5 +20,18 @@ public class StudentConfiguration : IEntityTypeConfiguration<Student>
         builder.Property(s => s.Name)
             .IsRequired()
             .HasMaxLength(200);
+
+        // Shadow audit property — not a C# property on Student, so it never
+        // clutters DTOs, but EF tracks and persists it like any other column.
+        builder.Property<DateTime>("LastUpdated");
+
+        // Concurrency token — Npgsql maps IsRowVersion() to PostgreSQL's
+        // system xmin column automatically; no separate column is created.
+        builder.Property(s => s.Version)
+            .IsRowVersion();
+
+        // Soft-delete filter — applies to every query against Student
+        // unless explicitly bypassed with IgnoreQueryFilters().
+        builder.HasQueryFilter(s => !s.IsDeleted);
     }
 }

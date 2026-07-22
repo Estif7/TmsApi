@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TmsApi.Data;
 using TmsApi.Entities;
 using TmsApi.Services;
+using TmsApi.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,7 +29,11 @@ builder.Services.AddOptions<PaymentOptions>()
     .BindConfiguration("Payments")
     .ValidateDataAnnotations()
     .ValidateOnStart();
-builder.Services.AddControllers();
+
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<AuditLogFilter>();
+});
 
 builder.Host.UseDefaultServiceProvider(options =>
 {

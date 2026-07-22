@@ -24,8 +24,6 @@ builder.Services.AddProblemDetails(options =>
 });
 
 builder.Services.AddOpenApi();
-builder.Services.AddSingleton<EnrollmentWorker>();
-builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 builder.Services.AddOptions<PaymentOptions>()
     .BindConfiguration("Payments")
     .ValidateDataAnnotations()
@@ -38,8 +36,6 @@ builder.Host.UseDefaultServiceProvider(options =>
     options.ValidateOnBuild = true;
 });
 
-builder.Services.AddSingleton<EnrollmentStore>();
-builder.Services.AddSingleton<EnrollmentWorker>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 
 builder.Services.AddDbContext<TmsDbContext>(options =>

@@ -1,0 +1,7 @@
+GET /api/v2/courses
+
+HTTP/1.1 200 OK
+Api-Supported-Versions: 1.0, 2.0
+Content-Type: application/json; charset=utf-8
+Server: Kestrel
+X-Correlation-Id: dba6cf03

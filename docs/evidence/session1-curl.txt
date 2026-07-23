@@ -1,0 +1,56 @@
+=== Test 1: Valid enrollment ===
+POST /api/v2/enrollments
+Body: {"studentId": 1, "courseCode": "CSE-101"}
+
+HTTP/1.1 201 Created
+Location: /api/v2/enrollments/1/schedule
+{"enrollmentId":1,"studentId":1,"courseCode":"CSE-101"}
+
+=== Test 2: Invalid course code format ===
+POST /api/v2/enrollments
+Body: {"studentId": 1, "courseCode": "invalid"}
+
+HTTP/1.1 400 Bad Request
+Content-Type: application/problem+json
+{
+  "errors": {
+    "courseCode": ["Course code must follow the format XXX-000 (e.g., CSE-101)."]
+  }
+}
+
+=== Test 3: Non-existent course ===
+POST /api/v2/enrollments
+Body: {"studentId": 1, "courseCode": "QQQ-999"}
+
+HTTP/1.1 404 Not Found
+{
+  "type": "https://tms.local/errors/course_not_found",
+  "title": "Enrollment rejected",
+  "status": 404,
+  "detail": "Course 'QQQ-999' was not found."
+}
+
+=== Test 4: Duplicate enrollment ===
+POST /api/v2/enrollments
+Body: {"studentId": 1, "courseCode": "CSE-101"}
+
+HTTP/1.1 409 Conflict
+{
+  "type": "https://tms.local/errors/already_enrolled",
+  "title": "Enrollment rejected",
+  "status": 409,
+  "detail": "Student 1 is already enrolled in CSE-101."
+}
+
+=== Versioning cross-check ===
+GET /api/v1/courses
+HTTP/1.1 200 OK
+Deprecation: true
+Sunset: Thu, 31 Dec 2026 00:00:00 GMT
+Link: <http://localhost:5121/api/v2/courses>; rel="successor-version"
+Api-Supported-Versions: 1.0, 2.0
+
+GET /api/v2/courses
+HTTP/1.1 200 OK
+Api-Supported-Versions: 1.0, 2.0
+(no Deprecation, Sunset, or Link headers)

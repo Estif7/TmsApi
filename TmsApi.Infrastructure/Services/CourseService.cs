@@ -1,9 +1,10 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
-using TmsApi.Data;
+using TmsApi.Infrastructure.Persistence;
 using TmsApi.Dtos;
-using TmsApi.Entities;
+using TmsApi.Domain.Entities;
 
-namespace TmsApi.Services;
+namespace TmsApi.Infrastructure.Services;
 
 public class CourseService(TmsDbContext context, ILogger<CourseService> logger) : ICourseService
 {
@@ -99,3 +100,4 @@ public class CourseService(TmsDbContext context, ILogger<CourseService> logger) 
         };
     }
 }
+

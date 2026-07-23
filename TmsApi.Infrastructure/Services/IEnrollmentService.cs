@@ -1,6 +1,6 @@
 using TmsApi.Dtos;
 
-namespace TmsApi.Services;
+namespace TmsApi.Infrastructure.Services;
 
 public interface IEnrollmentService
 {

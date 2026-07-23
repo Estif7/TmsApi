@@ -87,6 +87,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseMiddleware<V1DeprecationMiddleware>();
 app.MapControllers();
 
 if (app.Environment.IsDevelopment())

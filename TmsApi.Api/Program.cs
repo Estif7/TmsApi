@@ -1,9 +1,14 @@
 using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
-using TmsApi.Data;
-using TmsApi.Entities;
-using TmsApi.Services;
-using TmsApi.Filters;
+using TmsApi.Infrastructure.Persistence;
+using TmsApi.Domain.Entities;
+using TmsApi.Domain.Exceptions;
+using TmsApi.Application.Interfaces;
+using TmsApi.Infrastructure.Services;
+using TmsApi.Api.Filters;
+using TmsApi.Api.Middlewares;
+using TmsApi.Api.Options;
+using TmsApi.Api;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -102,7 +107,7 @@ if (app.Environment.IsDevelopment())
         await context.SaveChangesAsync();
     }
 
-    await TmsApi.Data.DataSeeder.SeedAsync(context);
+    await TmsApi.Infrastructure.Persistence.DataSeeder.SeedAsync(context);
 }
 
 app.Run();

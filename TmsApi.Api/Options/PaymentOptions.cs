@@ -1,3 +1,4 @@
+namespace TmsApi.Api.Options;
 using System.ComponentModel.DataAnnotations;
 
 public class PaymentOptions
@@ -8,3 +9,4 @@ public class PaymentOptions
     [Range(100, 100000)]
     public decimal MaxDepositBirr { get; init; }
 }
+

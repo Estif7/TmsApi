@@ -1,7 +1,9 @@
+namespace TmsApi.Api;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
+using TmsApi.Api;
 
 public class TrainingAuthHandler
     : AuthenticationHandler<AuthenticationSchemeOptions>

@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
-using TmsApi.Data;
+using TmsApi.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace TmsApi.Controllers;
+namespace TmsApi.Api.Controllers;
 
 [ApiController]
 [Route("api/test")]

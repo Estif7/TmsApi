@@ -1,3 +1,4 @@
+namespace TmsApi.Api.Middlewares;
 using System.Diagnostics;
 
 public class RequestLoggingMiddleware
@@ -35,3 +36,4 @@ public class RequestLoggingMiddleware
             context.Response.StatusCode, stopwatch.ElapsedMilliseconds);
     }
 }
+

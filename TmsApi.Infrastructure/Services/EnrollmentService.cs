@@ -1,7 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using TmsApi.Infrastructure.Persistence;
-using TmsApi.Dtos;
+using TmsApi.Application.DTOs;
+using TmsApi.Application.Interfaces;
 using TmsApi.Domain.Entities;
 
 namespace TmsApi.Infrastructure.Services;

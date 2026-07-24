@@ -11,9 +11,12 @@ public class TranscriptsController : ControllerBase
 {
     [HttpPost]
     [EnableRateLimiting("transcripts")]
-    public IActionResult RequestTranscript([FromBody] object? _)
+    public async Task<IActionResult> RequestTranscript([FromBody] object? _, CancellationToken ct)
     {
-        // Stub: Exercise 5 swaps this for enqueue + 202 + Location.
+        // Stub: simulates the 5-15s transcript build job so the concurrency
+        // limiter has something real to measure. Exercise 5 replaces this
+        // with enqueue + 202 Accepted + status URL + background worker.
+        await Task.Delay(TimeSpan.FromSeconds(3), ct);
         return Ok();
     }
 }

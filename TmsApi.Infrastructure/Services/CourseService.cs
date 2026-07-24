@@ -114,5 +114,18 @@ public class CourseService(TmsDbContext context, ILogger<CourseService> logger) 
             PageSize = request.PageSize
         };
     }
+
+    public async Task<CourseResponseDto?> UpdateAsync(int id, UpdateCourseRequest request, CancellationToken ct)
+    {
+        var course = await context.Courses.FirstOrDefaultAsync(c => c.Id == id, ct);
+        if (course is null) return null;
+
+        course.Title = request.Title;
+        await context.SaveChangesAsync(ct);
+
+        logger.LogInformation("Updated course {CourseId} title to {Title}", course.Id, course.Title);
+
+        return await GetByIdAsync(course.Id, ct);
+    }
 }
 

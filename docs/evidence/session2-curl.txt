@@ -1,0 +1,61 @@
+=== Exercise 3: HybridCache stampede protection ===
+
+50 concurrent GET /api/v2/courses on a cold cache:
+- Cache MISS for v2:courses:all fetching from DB (exactly 1)
+- Cache HIT for v2:courses:all (49)
+- Exactly one EF Core SQL pair against Courses (COUNT + paged SELECT) for the entire burst
+- Response times: first ~50 requests queued behind the miss (134ms-788ms), remaining requests resolved in 1-2ms once cache populated
+
+Tag invalidation test:
+PUT /api/v2/courses/1
+Body: {"title": "Updated title"}
+-> 200 OK
+-> Log: "Invalidating cache tag courses"
+
+Next GET /api/v2/courses:
+-> Log: "Cache MISS for v2:courses:all fetching from DB" (fresh read after invalidation)
+-> Response reflects updated title immediately
+
+Following GET /api/v2/courses:
+-> Log: "Cache HIT for v2:courses:all" (cache re-populated)
+
+=== Exercise 4: Tier-aware rate limiting ===
+
+Anonymous tier (no X-Api-Key header), 15 requests to GET /api/v2/courses:
+1 : 200
+2 : 200
+3 : 200
+4 : 200
+5 : 200
+6 : 200
+7 : 200
+8 : 200
+9 : 200
+10 : 200
+11 : 429 Retry-After=10
+12 : 429 Retry-After=10
+13 : 429 Retry-After=10
+14 : 429 Retry-After=10
+15 : 429 Retry-After=10
+
+Paid tier (X-Api-Key: tms-paid-001), 15 requests to GET /api/v2/courses:
+All 15 succeeded (200) - paid tier's TokenLimit=200 comfortably covers the burst.
+
+Transcript concurrency limiter (POST /api/v2/transcripts, paid tier, 3s simulated
+work per request, 30 concurrent requests):
+200: 25 (5 concurrent + 20 queued)
+429: 5 (requests beyond concurrency + queue capacity)
+
+Response times confirmed batches of 5 draining roughly every ~3 seconds
+(clusters around 3.2s, 6.2s, 9s, 12s, 14.8s), proving the concurrency limiter
+holds exactly 5 in flight and processes the queue oldest-first.
+
+=== Session Integration: cache + rate limit cooperation ===
+
+Confirmed via the same test data:
+- Anonymous tier hits its rate limit independently of cache state (correct;
+  rate limiting and caching are orthogonal concerns).
+- Paid tier is never throttled by the anonymous bucket, proving partition
+  keys are isolated per tier/caller.
+- Cache invalidation on write is immediately visible to the next read,
+  regardless of which tier issues that read.

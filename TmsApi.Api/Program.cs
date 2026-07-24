@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Hybrid;
 using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using TmsApi.Infrastructure.Persistence;
@@ -32,6 +33,15 @@ builder.Services.AddProblemDetails(options =>
         {
             context.ProblemDetails.Detail = context.Exception.Message;
         }
+    };
+});
+
+builder.Services.AddHybridCache(options =>
+{
+    options.DefaultEntryOptions = new HybridCacheEntryOptions
+    {
+        Expiration = TimeSpan.FromMinutes(10),
+        LocalCacheExpiration = TimeSpan.FromMinutes(2)
     };
 });
 
@@ -93,6 +103,7 @@ builder.Services.AddDbContext<TmsDbContext>(options =>
         .EnableSensitiveDataLogging()); // Show parameters in query logs (dev only)
 
 builder.Services.AddScoped<ICourseService, CourseService>();
+builder.Services.AddScoped<ICachedCourseService, CachedCourseService>();
 
 var app = builder.Build();
 

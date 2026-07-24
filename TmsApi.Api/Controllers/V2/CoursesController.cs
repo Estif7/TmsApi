@@ -10,13 +10,15 @@ namespace TmsApi.Api.Controllers.V2;
 [ApiVersion("2.0")]
 [Tags("Courses")]
 [Produces("application/json")]
-public class CoursesController(ICourseService courseService) : ControllerBase
+public class CoursesController(
+    ICachedCourseService cachedCourseService,
+    ICourseService courseService) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetCourses(
         [FromQuery] PagedRequest request, CancellationToken ct)
     {
-        var result = await courseService.GetCoursesAsync(request, ct);
+        var result = await cachedCourseService.GetCoursesAsync(request, ct);
 
         return Ok(new
         {
@@ -42,5 +44,17 @@ public class CoursesController(ICourseService courseService) : ControllerBase
                 enroll = "/api/v2/enrollments"
             }
         });
+    }
+
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> UpdateCourse(
+        int id, [FromBody] UpdateCourseRequest request, CancellationToken ct)
+    {
+        var updated = await courseService.UpdateAsync(id, request, ct);
+        if (updated is null) return NotFound();
+
+        await cachedCourseService.InvalidateCourseCacheAsync(ct);
+
+        return Ok(updated);
     }
 }

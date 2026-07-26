@@ -20,6 +20,11 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using TmsApi.Api.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
+using TmsApi.Infrastructure.Transcripts;
+using System.Threading.Channels;
+using TmsApi.Application.Transcripts;
+using TmsApi.Api.Workers;
+using TmsApi.Api.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -186,6 +191,14 @@ builder.Services.AddRateLimiter(options =>
 builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<ICachedCourseService, CachedCourseService>();
 
+builder.Services.AddSingleton<ITranscriptStatusStore, InMemoryTranscriptStatusStore>();
+
+builder.Services.AddSingleton(Channel.CreateBounded<TranscriptRequest>(
+    new BoundedChannelOptions(100) { FullMode = BoundedChannelFullMode.Wait }));
+
+builder.Services.AddHostedService<TranscriptWorker>();
+builder.Services.AddSignalR();
+
 var app = builder.Build();
 
 app.UseMiddleware<RequestLoggingMiddleware>();
@@ -202,6 +215,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<TmsHub>("/hubs/tms");
 
 if (app.Environment.IsDevelopment())
 {

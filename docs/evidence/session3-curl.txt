@@ -1,0 +1,60 @@
+=== Exercise 5: Background workers, status store, idempotency ===
+
+POST /api/v2/transcripts (Idempotency-Key: 11111111-2222-3333-4444-555555555555)
+Body: {"studentId": 1}
+-> 202 Accepted
+{
+  "reportId": "5a3ca91e87f0",
+  "studentId": 1,
+  "state": 0,
+  "requestedAt": "2026-07-26T08:27:36.4352007+00:00",
+  "startedAt": null,
+  "completedAt": null,
+  "downloadUrl": null,
+  "errorMessage": null
+}
+
+Status progression for reportId 5a3ca91e87f0, polled over time:
+- t+0s:   state 0 (Queued), startedAt null, completedAt null
+- t+~0.1s: state 1 (Processing), startedAt set
+- t+~5s:  state 2 (Ready), startedAt "08:27:36.44", completedAt "08:27:41.44"
+          (5.009s elapsed, matches the worker's simulated 5s delay),
+          downloadUrl "/api/v2/transcripts/5a3ca91e87f0/download"
+
+Repeat POST with the same Idempotency-Key:
+-> 202 Accepted, same reportId "5a3ca91e87f0"
+-> No new "Generating transcript..." log line (confirmed only one worker
+   run for this report id, dedup via idempotency key works correctly)
+
+GET /api/v2/transcripts/nonexistent123/status
+-> 404 Not Found
+{
+  "title": "Transcript not found",
+  "status": 404,
+  "detail": "No transcript request with id 'nonexistent123'."
+}
+
+=== Exercise 6: SignalR groups, reconnect, backplane awareness ===
+
+Two browser tabs connected via /hubs/tms:
+- Tab 1: ?studentId=1
+- Tab 2: ?studentId=2
+
+POST /api/v2/transcripts {"studentId": 1} (fresh reportId, no idempotency key):
+- Tab 1 console: "Transcript ready: <reportId> at /api/v2/transcripts/<reportId>/download"
+- Tab 2 console: nothing (message correctly scoped to student-1 group only)
+
+Server log confirms group-targeted dispatch, not broadcast:
+  "Transcript ready, notification sent: <reportId> to student-1"
+
+Reconnect test: API process restarted mid-session while both tabs connected.
+- Both tabs' WebSockets dropped (code 1006)
+- withAutomaticReconnect fired on schedule: attempt 1 (0ms), attempt 2 (2s),
+  attempt 3 (10s), attempt 4 (30s) per tab, matching configured backoff
+- Both tabs successfully reconnected once the new process was listening
+  ("HubConnection reconnected successfully", new connection id logged)
+- A transcript POST issued after the restart was still correctly delivered
+  to the reconnected tab 1 client only; tab 2 received nothing
+
+Clients.All is not used anywhere in the codebase — all dispatch goes through
+Clients.Group(GroupNames.Student(...)).

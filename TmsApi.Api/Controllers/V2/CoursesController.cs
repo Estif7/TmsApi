@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using TmsApi.Application.DTOs;
 using TmsApi.Application.Interfaces;
+using TmsApi.Application.Utilities;
 
 namespace TmsApi.Api.Controllers.V2;
 
@@ -16,13 +17,19 @@ public class CoursesController(
 {
     [HttpGet]
     public async Task<IActionResult> GetCourses(
-        [FromQuery] PagedRequest request, CancellationToken ct)
+        [FromQuery] string? fields,
+        [FromQuery] PagedRequest request,
+        CancellationToken ct)
     {
         var result = await cachedCourseService.GetCoursesAsync(request, ct);
 
+        var shaped = result.Items.ShapeData(fields, CourseResponseDtoFields.Allowed);
+
+        var fieldsQuery = string.IsNullOrWhiteSpace(fields) ? "" : $"&fields={fields}";
+
         return Ok(new
         {
-            data = result.Items,
+            data = shaped,
             meta = new
             {
                 result.TotalCount,
@@ -34,12 +41,12 @@ public class CoursesController(
             },
             links = new
             {
-                self = $"/api/v2/courses?page={result.Page}&pageSize={result.PageSize}",
+                self = $"/api/v2/courses?page={result.Page}&pageSize={result.PageSize}{fieldsQuery}",
                 next = result.HasNext
-                    ? $"/api/v2/courses?page={result.Page + 1}&pageSize={result.PageSize}"
+                    ? $"/api/v2/courses?page={result.Page + 1}&pageSize={result.PageSize}{fieldsQuery}"
                     : (string?)null,
                 prev = result.HasPrevious
-                    ? $"/api/v2/courses?page={result.Page - 1}&pageSize={result.PageSize}"
+                    ? $"/api/v2/courses?page={result.Page - 1}&pageSize={result.PageSize}{fieldsQuery}"
                     : (string?)null,
                 enroll = "/api/v2/enrollments"
             }

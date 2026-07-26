@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using TmsApi.Domain.Exceptions;
 
 namespace TmsApi.Api.ExceptionHandlers;
 
@@ -19,11 +20,17 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
                     .GroupBy(e => e.PropertyName)
                     .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray())),
 
+            BadRequestException bre => (
+                StatusCodes.Status400BadRequest,
+                "Bad request",
+                bre.Message,
+                (IDictionary<string, string[]>?)null),
+
             _ => (
                 StatusCodes.Status500InternalServerError,
                 "Server error",
                 $"An unexpected error occurred. Trace ID: {httpContext.TraceIdentifier}",
-                null)
+                (IDictionary<string, string[]>?)null)
         };
 
         if (status == StatusCodes.Status500InternalServerError)

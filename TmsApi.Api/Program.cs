@@ -23,7 +23,8 @@ using Microsoft.AspNetCore.Mvc;
 using TmsApi.Infrastructure.Transcripts;
 using System.Threading.Channels;
 using TmsApi.Application.Transcripts;
-using TmsApi.Infrastructure.Workers;
+using TmsApi.Api.Workers;
+using TmsApi.Api.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -196,6 +197,7 @@ builder.Services.AddSingleton(Channel.CreateBounded<TranscriptRequest>(
     new BoundedChannelOptions(100) { FullMode = BoundedChannelFullMode.Wait }));
 
 builder.Services.AddHostedService<TranscriptWorker>();
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -213,6 +215,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<TmsHub>("/hubs/tms");
 
 if (app.Environment.IsDevelopment())
 {

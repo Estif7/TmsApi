@@ -1,15 +1,17 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using System.Threading.Channels;
+using Microsoft.AspNetCore.SignalR;
+using TmsApi.Api.Hubs;
+using TmsApi.Application.Hubs;
 using TmsApi.Application.Transcripts;
 using TmsApi.Infrastructure.Transcripts;
-namespace TmsApi.Infrastructure.Workers;
+
+namespace TmsApi.Api.Workers;
 
 public class TranscriptWorker(
     Channel<TranscriptRequest> channel,
     IServiceScopeFactory scopeFactory,
     ITranscriptStatusStore statusStore,
+    IHubContext<TmsHub, ITmsHubClient> hubContext,
     ILogger<TranscriptWorker> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken ct)
@@ -34,7 +36,14 @@ public class TranscriptWorker(
 
                 var downloadUrl = $"/api/v2/transcripts/{reportId}/download";
                 await statusStore.MarkReadyAsync(reportId, downloadUrl, ct);
-                logger.LogInformation("Transcript ready: {ReportId}", reportId);
+
+                await hubContext.Clients
+                    .Group(GroupNames.Student(request.StudentId.ToString()))
+                    .ReceiveTranscriptReady(reportId, downloadUrl);
+
+                logger.LogInformation(
+                    "Transcript ready, notification sent: {ReportId} to {Group}",
+                    reportId, GroupNames.Student(request.StudentId.ToString()));
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {

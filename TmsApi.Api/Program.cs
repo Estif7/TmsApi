@@ -25,6 +25,11 @@ using System.Threading.Channels;
 using TmsApi.Application.Transcripts;
 using TmsApi.Api.Workers;
 using TmsApi.Api.Hubs;
+using Polly;
+using Polly.CircuitBreaker;
+using Polly.Retry;
+using Polly.Timeout;
+using TmsApi.Infrastructure.ExternalServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -199,6 +204,69 @@ builder.Services.AddSingleton(Channel.CreateBounded<TranscriptRequest>(
 builder.Services.AddHostedService<TranscriptWorker>();
 builder.Services.AddSignalR();
 
+builder.Services.AddResiliencePipeline("certificate-api", pipeline =>
+{
+    pipeline
+        // Outer: per-request hard timeout protects against hangs
+        .AddTimeout(TimeSpan.FromSeconds(5))
+        // Middle: circuit breaker protects against sustained outage
+        .AddCircuitBreaker(new CircuitBreakerStrategyOptions
+        {
+            FailureRatio = 0.5,
+            MinimumThroughput = 10,
+            SamplingDuration = TimeSpan.FromSeconds(30),
+            BreakDuration = TimeSpan.FromSeconds(15),
+            ShouldHandle = new PredicateBuilder()
+                .Handle<HttpRequestException>()
+                .Handle<TimeoutRejectedException>(),
+            OnOpened = args =>
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("========== Circuit OPENED — certificate service unavailable ==========");
+                Console.ResetColor();
+                return ValueTask.CompletedTask;
+            },
+            OnClosed = args =>
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("========== Circuit CLOSED — certificate service recovered ==========");
+                Console.ResetColor();
+                return ValueTask.CompletedTask;
+            },
+            OnHalfOpened = args =>
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("========== CIRCUIT HALF-OPEN ==========");
+                Console.ResetColor();
+                return ValueTask.CompletedTask;
+            }
+        })
+        // Inner: retry with jitter only for transient failures
+        .AddRetry(new RetryStrategyOptions
+        {
+            MaxRetryAttempts = 3,
+            Delay = TimeSpan.FromMilliseconds(500),
+            BackoffType = DelayBackoffType.Exponential,
+            UseJitter = true,
+            ShouldHandle = new PredicateBuilder()
+                .Handle<HttpRequestException>()
+                .Handle<TimeoutRejectedException>(),
+            OnRetry = args =>
+            {
+                Console.WriteLine(
+                    $"Retry #{args.AttemptNumber} after {args.RetryDelay.TotalMilliseconds:F0}ms ({args.Outcome.Exception?.GetType().Name})");
+                return ValueTask.CompletedTask;
+            }
+        });
+});
+
+builder.Services.AddHttpClient<ICertificateService, CertificateService>((sp, client) =>
+{
+    var baseUrl = sp.GetRequiredService<IConfiguration>().GetValue<string>("TmsApi:PublicBaseUrl")
+        ?? "http://localhost:5121";
+    client.BaseAddress = new Uri(baseUrl);
+});
+
 var app = builder.Build();
 
 app.UseMiddleware<RequestLoggingMiddleware>();
@@ -207,10 +275,7 @@ app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseHttpsRedirection();
 app.UseRouting();
-app.UseRouting();
 app.UseRateLimiter();
-app.UseAuthentication();
-app.UseAuthorization();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -268,5 +333,30 @@ if (app.Environment.IsDevelopment())
 
     await TmsApi.Infrastructure.Persistence.DataSeeder.SeedAsync(context);
 }
+
+// --- Lab-only fake certificate service ---
+var attempts = 0;
+app.MapPost("/fake/certificates", async () =>
+{
+    var n = Interlocked.Increment(ref attempts);
+
+    if (n % 7 == 0)
+    {
+        await Task.Delay(TimeSpan.FromSeconds(20));
+        return Results.Ok(new { Status = "issued", Attempt = n });
+    }
+
+    if (n % 3 != 0)
+    {
+        return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    }
+
+    if (n % 11 == 0)
+    {
+        return Results.BadRequest(new { error = "validation_failed" });
+    }
+
+    return Results.Ok(new { Status = "issued", Attempt = n });
+}).WithTags("lab-fixtures").DisableRateLimiting();
 
 app.Run();

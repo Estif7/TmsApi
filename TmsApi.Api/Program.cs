@@ -32,6 +32,11 @@ using Polly.Timeout;
 using TmsApi.Infrastructure.ExternalServices;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+
+const string ServiceName = "tms-api";
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -281,6 +286,20 @@ builder.Services.AddHealthChecks()
         connectionString: builder.Configuration.GetConnectionString("TmsDatabase")!,
         name: "postgres",
         tags: ["ready"]);
+
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(r => r.AddService(serviceName: ServiceName, serviceVersion: "1.0.0"))
+    .WithTracing(t => t
+        .AddSource(ServiceName)
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddOtlpExporter())
+    .WithMetrics(m => m
+        .AddMeter(ServiceName)
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddRuntimeInstrumentation()
+        .AddOtlpExporter());
 
 var app = builder.Build();
 

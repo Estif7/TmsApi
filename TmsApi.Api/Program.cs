@@ -30,6 +30,8 @@ using Polly.CircuitBreaker;
 using Polly.Retry;
 using Polly.Timeout;
 using TmsApi.Infrastructure.ExternalServices;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -267,7 +269,24 @@ builder.Services.AddHttpClient<ICertificateService, CertificateService>((sp, cli
     client.BaseAddress = new Uri(baseUrl);
 });
 
+builder.Services.AddHealthChecks()
+    .AddCheck("self", () => HealthCheckResult.Healthy("alive"), tags: ["live"])
+    .AddNpgSql(
+        connectionString: builder.Configuration.GetConnectionString("TmsDatabase")!,
+        name: "postgres",
+        tags: ["ready"]);
+
 var app = builder.Build();
+
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("live")
+}).DisableRateLimiting();
+
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+}).DisableRateLimiting();
 
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<V1DeprecationMiddleware>();

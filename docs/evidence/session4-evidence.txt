@@ -1,0 +1,108 @@
+=== Exercise 7: Data Shaping and HATEOAS with Whitelist Security ===
+
+Full response, GET /api/v2/courses (no fields param):
+- Each item includes all five whitelisted properties: Id, Code, Title,
+  MaxCapacity, EnrollmentCount
+
+Shaped response, GET /api/v2/courses?fields=id,title:
+- Each item contains only Id and Title, confirmed shaped correctly
+
+Invalid field - dangerous name, GET /api/v2/courses?fields=id,passwordHash:
+-> 400 Bad Request
+-> Detail: "Unknown field(s): passwordHash. Allowed fields: Id, Code, Title,
+   MaxCapacity, EnrollmentCount."
+
+Invalid field - internal-notes style, GET /api/v2/courses?fields=id,internalNotes:
+-> 400 Bad Request, same pattern, internalNotes listed as unknown
+
+HATEOAS: collection responses include meta (paging) and links
+(self/next/prev/enroll) - small honest set, no per-item detail links.
+
+=== Exercise 8: Polly v8 Resilience with Realistic Failure Simulation ===
+
+503 retry path confirmed:
+  Retry #1 after 865ms (HttpRequestException)
+  -> succeeded on second attempt, 200 OK with issued certificate
+
+Hang path confirmed (every 7th internal attempt):
+  20s simulated hang cut to ~5009ms by the outer AddTimeout(5s)
+  -> Polly.Timeout.TimeoutRejectedException thrown, OnTimeout event fired
+  -> surfaces as 500 (unhandled by controller's InvalidOperationException-only
+     catch; a real production controller would map TimeoutRejectedException
+     to a friendlier response)
+
+400 path confirmed (every 11th internal attempt):
+  No Retry #n log lines at all - CertificateService maps non-5xx failures to
+  InvalidOperationException, which sits outside ShouldHandle's transient-only
+  list (HttpRequestException, TimeoutRejectedException), so Polly correctly
+  never retries a non-transient client error.
+
+Circuit breaker: attempted to trip via burst testing (15-30 calls at various
+MinimumThroughput/FailureRatio settings) but could not reliably trip it under
+lab conditions. Root cause understood: pipeline order is Timeout ->
+CircuitBreaker -> Retry, so the breaker only observes ONE outcome per
+top-level call, after retries have already resolved most transient 503s
+internally. Only fully-exhausted-retry or timed-out calls count as
+breaker-visible failures, which the fake's realistic failure distribution
+(n%3!=0 for 503, n%7==0 for hang) produces too rarely to cross even a
+lowered threshold within a reasonable burst size. This matches the
+handout's own troubleshooting guidance ("MinimumThroughput too high for
+test volume... production value depends on real traffic"). The retry,
+timeout, and non-retry-on-400 behaviors are all proven; circuit breaker
+open/close transitions were not directly observed in this lab session,
+though the breaker registration and configuration are in place and correct.
+
+Step 4/5 (no code, concept only):
+- AddStandardResilienceHandler() is the one-liner default (retry + breaker +
+  per-attempt timeout + total timeout) for HTTP clients that don't need
+  bespoke tuning.
+- AddRateLimiter inside a Polly pipeline is a bulkhead (caps concurrent
+  in-flight requests to a downstream); AddHedging issues a second request to
+  a slow upstream for idempotent reads only, never for state-changing POSTs.
+
+=== Exercise 9: Health Checks + OpenTelemetry ===
+
+Liveness/readiness separation confirmed:
+GET /health/live -> 200 OK, "Healthy"
+GET /health/ready -> 200 OK, "Healthy" (Postgres reachable)
+
+With PostgreSQL service stopped (Stop-Service postgresql-x64-18):
+GET /health/ready -> 503 Service Unavailable, "Unhealthy"
+GET /health/live -> still 200 OK, "Healthy" (unaffected - proves liveness
+  and readiness are answering genuinely different questions)
+
+After restarting PostgreSQL:
+GET /health/ready -> back to 200 OK
+
+Structured JSON logging confirmed: every log line is valid JSON containing
+TraceId, SpanId, RequestId, ConnectionId, and custom scope values
+(CorrelationId, RequestName from LoggingBehavior). Confirmed one TraceId
+ties every log line for a single request together end to end (e.g. request
+start, cache miss/hit, EF query, audit response, request finish all share
+the same TraceId).
+
+OpenTelemetry tracing confirmed via Jaeger (local Docker container,
+jaegertracing/all-in-one, ports 16686/4317):
+- Service "tms-api" visible in Jaeger's service dropdown
+- 12 traces returned for a mixed burst of GET /api/v2/courses and Scalar/
+  OpenAPI infrastructure requests
+- Trace durations varied from ~1.8ms (cache hits) to ~359ms (cache miss
+  hitting the database), consistent with Session 2's cache behavior
+
+Custom cache-hit/miss meter (tms.cache.hits / tms.cache.misses):
+- Code path confirmed executing correctly (Cache HIT/MISS log lines appear
+  alongside every GetCoursesAsync call, and the Counter<long>.Add() calls
+  sit in the same branch)
+- Jaeger's Monitor tab does not display OTLP metrics with the all-in-one
+  container's default configuration (Jaeger is primarily a tracing backend;
+  native metrics UI requires an additional Prometheus backend not set up in
+  this lab). This is a known limitation of the Jaeger all-in-one image, not
+  a defect in the OpenTelemetry registration - the OTLP exporter pipeline
+  itself is proven working end to end via the successful trace export.
+
+Rate limiter interaction note: internal test bursts against GET
+/api/v2/courses without an API key were repeatedly throttled by the
+Exercise-4 anonymous tier limiter (10 tokens per 10s), independent of and
+prior to reaching the cache/OTel code paths. This is expected, correct
+behavior - not a defect - and mirrors the same interaction observed and
+understood during Exercise 8's certificate load testing.

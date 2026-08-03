@@ -25,8 +25,26 @@ using System.Threading.Channels;
 using TmsApi.Application.Transcripts;
 using TmsApi.Api.Workers;
 using TmsApi.Api.Hubs;
+using Polly;
+using Polly.CircuitBreaker;
+using Polly.Retry;
+using Polly.Timeout;
+using TmsApi.Infrastructure.ExternalServices;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+
+const string ServiceName = "tms-api";
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Logging.AddJsonConsole(options =>
+{
+    options.IncludeScopes = true;
+    options.JsonWriterOptions = new() { Indented = false };
+});
 
 builder.Services
     .AddAuthentication("Training")
@@ -199,7 +217,101 @@ builder.Services.AddSingleton(Channel.CreateBounded<TranscriptRequest>(
 builder.Services.AddHostedService<TranscriptWorker>();
 builder.Services.AddSignalR();
 
+builder.Services.AddResiliencePipeline("certificate-api", pipeline =>
+{
+    pipeline
+        // Outer: per-request hard timeout protects against hangs
+        .AddTimeout(TimeSpan.FromSeconds(5))
+        // Middle: circuit breaker protects against sustained outage
+        .AddCircuitBreaker(new CircuitBreakerStrategyOptions
+        {
+            FailureRatio = 0.5,
+            MinimumThroughput = 10,
+            SamplingDuration = TimeSpan.FromSeconds(30),
+            BreakDuration = TimeSpan.FromSeconds(15),
+            ShouldHandle = new PredicateBuilder()
+                .Handle<HttpRequestException>()
+                .Handle<TimeoutRejectedException>(),
+            OnOpened = args =>
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("========== Circuit OPENED — certificate service unavailable ==========");
+                Console.ResetColor();
+                return ValueTask.CompletedTask;
+            },
+            OnClosed = args =>
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("========== Circuit CLOSED — certificate service recovered ==========");
+                Console.ResetColor();
+                return ValueTask.CompletedTask;
+            },
+            OnHalfOpened = args =>
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("========== CIRCUIT HALF-OPEN ==========");
+                Console.ResetColor();
+                return ValueTask.CompletedTask;
+            }
+        })
+        // Inner: retry with jitter only for transient failures
+        .AddRetry(new RetryStrategyOptions
+        {
+            MaxRetryAttempts = 3,
+            Delay = TimeSpan.FromMilliseconds(500),
+            BackoffType = DelayBackoffType.Exponential,
+            UseJitter = true,
+            ShouldHandle = new PredicateBuilder()
+                .Handle<HttpRequestException>()
+                .Handle<TimeoutRejectedException>(),
+            OnRetry = args =>
+            {
+                Console.WriteLine(
+                    $"Retry #{args.AttemptNumber} after {args.RetryDelay.TotalMilliseconds:F0}ms ({args.Outcome.Exception?.GetType().Name})");
+                return ValueTask.CompletedTask;
+            }
+        });
+});
+
+builder.Services.AddHttpClient<ICertificateService, CertificateService>((sp, client) =>
+{
+    var baseUrl = sp.GetRequiredService<IConfiguration>().GetValue<string>("TmsApi:PublicBaseUrl")
+        ?? "http://localhost:5121";
+    client.BaseAddress = new Uri(baseUrl);
+});
+
+builder.Services.AddHealthChecks()
+    .AddCheck("self", () => HealthCheckResult.Healthy("alive"), tags: ["live"])
+    .AddNpgSql(
+        connectionString: builder.Configuration.GetConnectionString("TmsDatabase")!,
+        name: "postgres",
+        tags: ["ready"]);
+
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(r => r.AddService(serviceName: ServiceName, serviceVersion: "1.0.0"))
+    .WithTracing(t => t
+        .AddSource(ServiceName)
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddOtlpExporter())
+    .WithMetrics(m => m
+        .AddMeter(ServiceName)
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddRuntimeInstrumentation()
+        .AddOtlpExporter());
+
 var app = builder.Build();
+
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("live")
+}).DisableRateLimiting();
+
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+}).DisableRateLimiting();
 
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<V1DeprecationMiddleware>();
@@ -207,10 +319,7 @@ app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseHttpsRedirection();
 app.UseRouting();
-app.UseRouting();
 app.UseRateLimiter();
-app.UseAuthentication();
-app.UseAuthorization();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -268,5 +377,30 @@ if (app.Environment.IsDevelopment())
 
     await TmsApi.Infrastructure.Persistence.DataSeeder.SeedAsync(context);
 }
+
+// --- Lab-only fake certificate service ---
+var attempts = 0;
+app.MapPost("/fake/certificates", async () =>
+{
+    var n = Interlocked.Increment(ref attempts);
+
+    if (n % 7 == 0)
+    {
+        await Task.Delay(TimeSpan.FromSeconds(20));
+        return Results.Ok(new { Status = "issued", Attempt = n });
+    }
+
+    if (n % 3 != 0)
+    {
+        return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    }
+
+    if (n % 11 == 0)
+    {
+        return Results.BadRequest(new { error = "validation_failed" });
+    }
+
+    return Results.Ok(new { Status = "issued", Attempt = n });
+}).WithTags("lab-fixtures").DisableRateLimiting();
 
 app.Run();

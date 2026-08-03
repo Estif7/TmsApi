@@ -15,7 +15,6 @@ public class CachedCourseService(
     {
         var key = CacheKeys.Course(code);
         var dbHit = false;
-
         var dto = await cache.GetOrCreateAsync(
             key,
             (inner, code),
@@ -28,7 +27,14 @@ public class CachedCourseService(
             tags: [CacheKeys.CoursesTag],
             cancellationToken: ct);
 
-        if (!dbHit) logger.LogInformation("Cache HIT for {Key}", key);
+        if (dbHit)
+            TmsMeters.CacheMisses.Add(1, new KeyValuePair<string, object?>("key.kind", "course"));
+        else
+        {
+            logger.LogInformation("Cache HIT for {Key}", key);
+            TmsMeters.CacheHits.Add(1, new KeyValuePair<string, object?>("key.kind", "course"));
+        }
+
         return dto;
     }
 
@@ -37,7 +43,6 @@ public class CachedCourseService(
     {
         var key = CacheKeys.CoursesAll;
         var dbHit = false;
-
         var result = await cache.GetOrCreateAsync(
             key,
             (inner, request),
@@ -50,7 +55,14 @@ public class CachedCourseService(
             tags: [CacheKeys.CoursesTag],
             cancellationToken: ct);
 
-        if (!dbHit) logger.LogInformation("Cache HIT for {Key}", key);
+        if (dbHit)
+            TmsMeters.CacheMisses.Add(1, new KeyValuePair<string, object?>("key.kind", "course"));
+        else
+        {
+            logger.LogInformation("Cache HIT for {Key}", key);
+            TmsMeters.CacheHits.Add(1, new KeyValuePair<string, object?>("key.kind", "course"));
+        }
+
         return result;
     }
 

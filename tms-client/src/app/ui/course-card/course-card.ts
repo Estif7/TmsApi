@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 @Component({
   selector: "tms-course-card",
   standalone: true,
+  imports: [RouterLink],
   templateUrl: "./course-card.html",
   styleUrl: "./course-card.scss",
 })

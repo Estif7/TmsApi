@@ -16,5 +16,11 @@ export const routes: Routes = [
         path: 'courses/:id',
         loadComponent: () => import('./features/course-detail/course-detail')
             .then(m => m.CourseDetail)
+    },
+    {
+        path: 'enroll',
+        loadComponent: () =>
+            import('./features/enrollment-form/enrollment-form')
+                .then(m => m.EnrollmentForm)
     }
 ];

@@ -1,13 +1,13 @@
-import { Component, input, effect } from "@angular/core";
+import { Component, input, effect, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 @Component({
-  selector: "app-course-detail",
+  selector: 'app-course-detail',
   standalone: true,
-  templateUrl: "./course-detail.html",
-  imports: [RouterLink]
+  templateUrl: './course-detail.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [RouterLink],
 })
-
 export class CourseDetail {
   id = input.required<string>();
   constructor() {

@@ -5,7 +5,7 @@ export const routes: Routes = [
         path: 'student-dashboard',
         loadComponent: () =>
             import('./features/student-dashboard/student-dashboard')
-                .then(m => m.StudentDashboardComponent)
+                .then(m => m.StudentDashboard)
     },
     {
         path: '',

@@ -1,35 +1,61 @@
-import { Component, viewChild, effect, inject } from '@angular/core';
+import { Component, inject, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
-import { MatSortModule, MatSort } from '@angular/material/sort';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatButtonModule } from '@angular/material/button';
+import { MatChipsModule } from '@angular/material/chips';
 import { EnrollmentStore } from '../../store/enrollment.store';
 import { Enrollment } from '../../models/enrollment.model';
+import { effect } from '@angular/core';
 
 @Component({
-  selector: 'tms-enrollment-list',
+  selector: 'app-enrollment-list',
   standalone: true,
-  imports: [MatTableModule, MatPaginatorModule, MatSortModule],
+  imports: [
+    CommonModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatButtonModule,
+    MatChipsModule,
+  ],
   templateUrl: './enrollment-list.html',
-  styleUrl: './enrollment-list.scss'
 })
-export class EnrollmentList {
+export class EnrollmentList implements OnInit, AfterViewInit {
   store = inject(EnrollmentStore);
-  displayedColumns = ['studentName', 'courseName', 'status', 'actions'];
-  dataSource = new MatTableDataSource<Enrollment>();
 
-  readonly paginator = viewChild.required(MatPaginator);
-  readonly sort = viewChild.required(MatSort);
+  displayedColumns: string[] = [
+    'id',
+    'studentName',
+    'courseName',
+    'enrolledAt',
+    'status',
+    'actions',
+  ];
+
+  dataSource = new MatTableDataSource<Enrollment>([]);
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
 
   constructor() {
+    // Keep MatTableDataSource in sync with SignalStore entities
     effect(() => {
       this.dataSource.data = this.store.entities();
     });
+  }
 
-    effect(() => {
-      this.dataSource.paginator = this.paginator();
-      this.dataSource.sort = this.sort();
-    });
-
+  ngOnInit(): void {
     this.store.loadEnrollments();
+  }
+
+  ngAfterViewInit(): void {
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+  }
+
+  approve(id: number): void {
+    this.store.approveEnrollment(id);
   }
 }

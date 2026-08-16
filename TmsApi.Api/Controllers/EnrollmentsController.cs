@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using TmsApi.Api.Hubs;
 using TmsApi.Application.DTOs;
 using TmsApi.Application.Interfaces;
 
@@ -72,9 +74,17 @@ public class EnrollmentsController(
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [EndpointSummary("Approve an enrolment record")]
-    public async Task<IActionResult> ApproveEnrollment(int id, CancellationToken ct)
+    public async Task<IActionResult> ApproveEnrollment(
+        int id, 
+        [FromServices] IHubContext<EnrollmentHub> hubContext, 
+        CancellationToken ct)
     {
         var success = await enrollmentService.ApproveAsync(id, ct);
-        return success ? NoContent() : NotFound();
+        if (!success) return NotFound();
+
+        // Broadcast change to all connected Angular clients
+        await hubContext.Clients.All.SendAsync("EnrollmentStatusUpdated", new { enrollmentId = id, status = "Approved" }, ct);
+
+        return NoContent();
     }
 }

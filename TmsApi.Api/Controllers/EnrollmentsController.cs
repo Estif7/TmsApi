@@ -39,4 +39,42 @@ public class EnrollmentsController(
             ? Ok(enrollment)
             : NotFound();
     }
+
+    [HttpPost(Name = "CreateEnrollment")]
+    [ProducesResponseType(typeof(EnrollmentResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [EndpointSummary("Create an enrolment for a course")]
+    public async Task<IActionResult> CreateEnrollment(
+        int courseId,
+        [FromBody] EnrollStudentRequest request,
+        CancellationToken ct)
+    {
+        var course = await courseService.GetByIdAsync(courseId, ct);
+        if (course is null) return NotFound();
+
+        var created = await enrollmentService.CreateAsync(courseId, request, ct);
+
+        return CreatedAtRoute(nameof(GetEnrollment), new { courseId = created.CourseId, id = created.Id }, created);
+    }
+
+    // --- Added Endpoints for Module 9 Angular Integration ---
+
+    [HttpGet("/api/enrollments", Name = "GetAllEnrollments")]
+    [ProducesResponseType(typeof(IReadOnlyList<EnrollmentResponseDto>), StatusCodes.Status200OK)]
+    [EndpointSummary("List all enrolments across all courses")]
+    public async Task<IActionResult> GetAllEnrollments(CancellationToken ct)
+    {
+        var enrollments = await enrollmentService.GetAllAsync(ct);
+        return Ok(enrollments);
+    }
+
+    [HttpPost("/api/enrollments/{id:int}/approve", Name = "ApproveEnrollment")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [EndpointSummary("Approve an enrolment record")]
+    public async Task<IActionResult> ApproveEnrollment(int id, CancellationToken ct)
+    {
+        var success = await enrollmentService.ApproveAsync(id, ct);
+        return success ? NoContent() : NotFound();
+    }
 }

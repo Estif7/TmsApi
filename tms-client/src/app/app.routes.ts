@@ -24,10 +24,16 @@ export const routes: Routes = [
                 .then(m => m.EnrollmentForm)
     },
     {
+        path: 'dashboard',
+        loadComponent: () =>
+        import('./features/instructor-dashboard/instructor-dashboard')
+            .then(m => m.InstructorDashboard)
+    },
+    {
         path: 'enrollments',
         loadComponent: () =>
         import('./features/enrollment-list/enrollment-list')
-            .then((m) => m.EnrollmentList),
+            .then(m => m.EnrollmentList)
     },
-    { path: '', redirectTo: 'enrollments', pathMatch: 'full' },
-    ];
+    { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
+];

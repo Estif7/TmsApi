@@ -31,4 +31,13 @@ public interface IEnrollmentService
     Task<List<Enrollment>> GetByStudentIdAsync(
         int studentId,
         CancellationToken ct);
+
+    // --- Added for Module 9 Angular State Management ---
+
+    Task<List<EnrollmentResponseDto>> GetAllAsync(
+        CancellationToken ct);
+
+    Task<bool> ApproveAsync(
+        int id,
+        CancellationToken ct);
 }

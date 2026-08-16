@@ -10,6 +10,8 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { CourseCard } from '../../ui/course-card/course-card';
 import { Course } from '../../models/course.model';
 import { CourseService } from '../../services/course';
+import { EnrollmentService } from '../../services/enrollment';
+import { EnrollmentStore } from '../../store/enrollment.store';
 
 @Component({
   selector: 'app-student-dashboard',
@@ -21,6 +23,8 @@ import { CourseService } from '../../services/course';
 })
 export class StudentDashboard {
   private readonly courseService = inject(CourseService);
+  private readonly store = inject(EnrollmentStore);
+  private readonly enrollmentService = inject(EnrollmentService);
 
   studentName = signal('Liya Kebede');
 
@@ -49,5 +53,16 @@ export class StudentDashboard {
 
       console.log('Enrollment requested for:', course.title);
     }
+  }
+
+  enroll(courseId: number) {
+    // 1. Send create request to API
+    this.enrollmentService.createEnrollment(courseId, { studentId: 101 }).subscribe({
+      next: () => {
+        // 2. Refresh store so new enrollment appears instantly
+        this.store.loadEnrollments();
+      },
+      error: (err) => console.error('Failed to enroll:', err),
+    });
   }
 }

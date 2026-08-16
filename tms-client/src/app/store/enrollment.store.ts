@@ -12,7 +12,7 @@ import {
   updateEntity,
 } from '@ngrx/signals/entities';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import { pipe, concatMap, tap, catchError, EMPTY } from 'rxjs';
+import { pipe, switchMap, tap, catchError, EMPTY } from 'rxjs';
 import { EnrollmentService } from '../services/enrollment';
 import { Enrollment } from '../models/enrollment.model';
 
@@ -29,11 +29,22 @@ export const EnrollmentStore = signalStore(
     loadEnrollments: rxMethod<void>(
       pipe(
         tap(() => patchState(store, { isLoading: true, error: null })),
-        concatMap(() =>
+        switchMap(() =>
           api.getAll().pipe(
-            tap((rows) =>
-              patchState(store, setAllEntities(rows), { isLoading: false })
-            ),
+            tap((rows) => {
+              // Strictly map API DTOs into full Enrollment state objects
+              const mapped: Enrollment[] = rows.map((r) => ({
+                id: r.id,
+                courseId: r.courseId,
+                studentId: r.studentId,
+                enrolledAt: r.enrolledAt,
+                studentName: r.studentName ?? `Student #${r.studentId}`,
+                courseName: r.courseName ?? `Course #${r.courseId}`,
+                status: (r.status as 'Pending' | 'Approved' | 'Rejected') ?? 'Pending',
+              }));
+
+              patchState(store, setAllEntities(mapped), { isLoading: false });
+            }),
             catchError((err) => {
               patchState(store, { isLoading: false, error: err.message });
               return EMPTY;
@@ -42,23 +53,21 @@ export const EnrollmentStore = signalStore(
         )
       )
     ),
-    approveEnrollment: rxMethod<string>(
+    approveEnrollment: rxMethod<number>(
       pipe(
         tap((id) => {
-          // Step 1: Optimistic update (UI changes immediately)
           patchState(
             store,
             updateEntity({ id, changes: { status: 'Approved' } })
           );
         }),
-        concatMap((id) =>
+        switchMap((id) =>
           api.approve(id).pipe(
             catchError(() => {
-              // Step 2: Rollback to 'Pending' on server error
               patchState(
                 store,
                 updateEntity({ id, changes: { status: 'Pending' } }),
-                { error: 'Server rejected approval. Check constraints.' }
+                { error: 'Server rejected approval.' }
               );
               return EMPTY;
             })

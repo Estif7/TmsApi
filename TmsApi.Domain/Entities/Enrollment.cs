@@ -9,6 +9,7 @@ public class Enrollment
     public int CourseId { get; set; }
     public decimal? Grade { get; set; } // Nullable, as student may be currently enrolled
     public DateTime EnrolledAt { get; set; } = DateTime.UtcNow;
+    public string Status { get; set; } = "Pending";
     public bool IsArchived { get; set; } = false;
 
     // Navigation properties back to entities

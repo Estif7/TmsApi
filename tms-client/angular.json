@@ -19,6 +19,7 @@
       "prefix": "app",
       "architect": {
         "build": {
+          "proxyConfig": "proxy.conf.json",
           "builder": "@angular/build:application",
           "options": {
             "browser": "src/main.ts",
@@ -60,6 +61,9 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "proxyConfig": "proxy.conf.json"
+          },
           "configurations": {
             "production": {
               "buildTarget": "tms-client:build:production"

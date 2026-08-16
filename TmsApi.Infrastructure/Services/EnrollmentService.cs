@@ -22,7 +22,8 @@ public class EnrollmentService(
                 e.Id,
                 e.CourseId,
                 e.StudentId,
-                e.EnrolledAt))
+                e.EnrolledAt,
+                e.Status ?? "Pending"))
             .FirstOrDefaultAsync(ct);
 
     public async Task<EnrollmentResponseDto> CreateAsync(
@@ -59,7 +60,8 @@ public class EnrollmentService(
                 e.Id,
                 e.CourseId,
                 e.StudentId,
-                e.EnrolledAt))
+                e.EnrolledAt,
+                e.Status ?? "Pending"))
             .ToListAsync(ct);
 
     public Task<bool> ExistsAsync(int studentId, string courseCode, CancellationToken ct) =>
@@ -83,4 +85,32 @@ public class EnrollmentService(
             .Include(e => e.Course)
             .Where(e => e.StudentId == studentId)
             .ToListAsync(ct);
+
+    // --- Added for Module 9 Angular State Management ---
+
+    public Task<List<EnrollmentResponseDto>> GetAllAsync(CancellationToken ct) =>
+        context.Enrollments
+            .AsNoTracking()
+            .Select(e => new EnrollmentResponseDto(
+                e.Id,
+                e.CourseId,
+                e.StudentId,
+                e.EnrolledAt,
+                e.Status ?? "Pending"))
+            .ToListAsync(ct);
+
+    public async Task<bool> ApproveAsync(int id, CancellationToken ct)
+    {
+        var enrollment = await context.Enrollments.FindAsync([id], ct);
+        if (enrollment is null) return false;
+
+        enrollment.Status = "Approved"; // Modify entity property
+
+        // Force EF Core to mark the entity as modified (if state tracking is tricky)
+        context.Entry(enrollment).Property(e => e.Status).IsModified = true;
+
+        await context.SaveChangesAsync(ct);
+        logger.LogInformation("Enrollment {Id} status set to Approved in DB", id);
+        return true;
+    }
 }

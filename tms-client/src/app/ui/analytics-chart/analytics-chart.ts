@@ -6,19 +6,33 @@ import { Enrollment } from '../../models/enrollment.model';
   standalone: true,
   template: `
     <div class="chart-container">
-      <h3>Enrollment Analytics</h3>
+      <div class="chart-header">
+        <h3>Enrollment Analytics</h3>
+        <span class="chart-total">Total records: {{ data().length }}</span>
+      </div>
+
       <div class="chart-bars">
-        <div class="bar approved" [style.height.px]="approvedHeight()">
-          <span>Approved</span>
+        <div class="bar-wrapper">
+          <div class="bar approved" [style.height.%]="approvedHeight()">
+            {{ approvedCount() }}
+          </div>
+          <span class="bar-label">Approved</span>
         </div>
-        <div class="bar pending" [style.height.px]="pendingHeight()">
-          <span>Pending</span>
+
+        <div class="bar-wrapper">
+          <div class="bar pending" [style.height.%]="pendingHeight()">
+            {{ pendingCount() }}
+          </div>
+          <span class="bar-label">Pending</span>
         </div>
-        <div class="bar rejected" [style.height.px]="rejectedHeight()">
-          <span>Rejected</span>
+
+        <div class="bar-wrapper">
+          <div class="bar rejected" [style.height.%]="rejectedHeight()">
+            {{ rejectedCount() }}
+          </div>
+          <span class="bar-label">Rejected</span>
         </div>
       </div>
-      <p class="chart-summary">Total records: {{ data().length }}</p>
     </div>
   `,
   styleUrl: './analytics-chart.scss'
@@ -26,18 +40,13 @@ import { Enrollment } from '../../models/enrollment.model';
 export class AnalyticsChart {
   data = input.required<Enrollment[]>();
 
-  approvedHeight = computed(() => {
-    const count = this.data().filter(e => e.status === 'Approved').length;
-    return Math.max(20, count * 3);
-  });
+  private total = computed(() => this.data().length || 1);
 
-  pendingHeight = computed(() => {
-    const count = this.data().filter(e => e.status === 'Pending').length;
-    return Math.max(20, count * 3);
-  });
+  approvedCount = computed(() => this.data().filter(e => e.status === 'Approved').length);
+  pendingCount = computed(() => this.data().filter(e => e.status === 'Pending').length);
+  rejectedCount = computed(() => this.data().filter(e => e.status === 'Rejected').length);
 
-  rejectedHeight = computed(() => {
-    const count = this.data().filter(e => e.status === 'Rejected').length;
-    return Math.max(20, count * 3);
-  });
+  approvedHeight = computed(() => Math.max(12, (this.approvedCount() / this.total()) * 100));
+  pendingHeight = computed(() => Math.max(12, (this.pendingCount() / this.total()) * 100));
+  rejectedHeight = computed(() => Math.max(12, (this.rejectedCount() / this.total()) * 100));
 }

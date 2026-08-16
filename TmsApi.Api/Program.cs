@@ -39,6 +39,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Identity;
 
 const string ServiceName = "tms-api";
 
@@ -52,12 +53,6 @@ builder.Logging.AddJsonConsole(options =>
     options.JsonWriterOptions = new() { Indented = false };
 });
 
-builder.Services
-    .AddAuthentication("Training")
-    .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions,
-        TrainingAuthHandler>("Training", null);
-builder.Services.AddAuthorization();
-
 builder.Services.AddProblemDetails(options =>
 {
     options.CustomizeProblemDetails = context =>
@@ -68,6 +63,25 @@ builder.Services.AddProblemDetails(options =>
         }
     };
 });
+
+// Add Identity Core with enterprise password and lockout policies
+builder.Services.AddIdentityCore<TmsUser>(options =>
+{
+    // Enterprise Password Policy
+    options.Password.RequiredLength = 12;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireDigit = true;
+    options.Password.RequireNonAlphanumeric = true;
+    
+    // Brute-Force Lockout Protection
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    options.Lockout.AllowedForNewUsers = true;
+})
+.AddRoles<IdentityRole>()
+.AddEntityFrameworkStores<TmsDbContext>();
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddHybridCache(options =>
 {

@@ -417,4 +417,6 @@ app.MapPost("/fake/certificates", async () =>
     return Results.Ok(new { Status = "issued", Attempt = n });
 }).WithTags("lab-fixtures").DisableRateLimiting();
 
+app.MapHub<TmsApi.Api.Hubs.EnrollmentHub>("/hubs/enrollments");
+
 app.Run();

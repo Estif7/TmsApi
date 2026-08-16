@@ -143,6 +143,7 @@ builder.Host.UseDefaultServiceProvider(options =>
 });
 
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
+builder.Services.AddScoped<TokenService>();
 
 builder.Services.AddDbContext<TmsDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("TmsDatabase"))

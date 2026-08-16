@@ -3,6 +3,7 @@ import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient, withInterceptors, withXsrfConfiguration } from '@angular/common/http';
 import { credentialsInterceptor } from './interceptors/credentials.interceptor';
 import { routes } from './app.routes';
+import { errorInterceptor } from './interceptors/error.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -13,7 +14,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withComponentInputBinding()),
 
     provideHttpClient(
-      withInterceptors([credentialsInterceptor]),
+      withInterceptors([credentialsInterceptor, errorInterceptor]),
       withXsrfConfiguration({
         cookieName: 'XSRF-TOKEN',   // Cookie issued by .NET server
         headerName: 'X-XSRF-TOKEN', // Header expected by .NET server

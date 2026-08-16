@@ -7,3 +7,5 @@ public record AuthResponseDto(
     string Email,
     string Role,
     DateTime ExpiresAt);
+
+public record UserProfileDto(string DisplayName, string Role);

@@ -38,6 +38,7 @@ using OpenTelemetry.Trace;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Antiforgery;
 
 const string ServiceName = "tms-api";
 
@@ -341,6 +342,10 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "X-XSRF-TOKEN";
+});
 
 var app = builder.Build();
 
@@ -365,6 +370,21 @@ app.UseRouting();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+app.Use(async (context, next) =>
+{
+    if (context.User.Identity?.IsAuthenticated == true || context.Request.Cookies.ContainsKey("tms_auth"))
+    {
+        var antiforgery = context.RequestServices.GetRequiredService<IAntiforgery>();
+        var tokens = antiforgery.GetAndStoreTokens(context);
+        context.Response.Cookies.Append("XSRF-TOKEN", tokens.RequestToken!, new CookieOptions
+        {
+            HttpOnly = false, // MUST be false so Angular JavaScript can read it
+            Secure = !builder.Environment.IsDevelopment(),
+            SameSite = SameSiteMode.Strict
+        });
+    }
+    await next(context);
+});
 
 app.MapControllers();
 app.MapHub<TmsHub>("/hubs/tms");

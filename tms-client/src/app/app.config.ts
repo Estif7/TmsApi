@@ -1,7 +1,7 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
-import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
-import { authInterceptor } from './auth.interceptor';
+import { provideHttpClient, withInterceptors, withXsrfConfiguration } from '@angular/common/http';
+import { credentialsInterceptor } from './interceptors/credentials.interceptor';
 import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
@@ -12,6 +12,12 @@ export const appConfig: ApplicationConfig = {
 
     provideRouter(routes, withComponentInputBinding()),
 
-    provideHttpClient(withXhr(), withInterceptors([authInterceptor])),
+    provideHttpClient(
+      withInterceptors([credentialsInterceptor]),
+      withXsrfConfiguration({
+        cookieName: 'XSRF-TOKEN',   // Cookie issued by .NET server
+        headerName: 'X-XSRF-TOKEN', // Header expected by .NET server
+      })
+    ),
   ],
 };

@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.SignalR;
 using TmsApi.Api.Hubs;
 using TmsApi.Application.DTOs;
 using TmsApi.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TmsApi.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/courses/{courseId:int}/enrollments")]
 [Tags("Enrollments")]

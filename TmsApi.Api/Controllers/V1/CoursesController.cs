@@ -96,4 +96,26 @@ public class CoursesController(
             new { id = result.Id },
             result);
     }
+
+    [HttpDelete("{id:int}")]
+    [IgnoreAntiforgeryToken]
+[ProducesResponseType(StatusCodes.Status204NoContent)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+[EndpointSummary("Delete a course by ID")]
+[EndpointDescription("Deletes the specified course. Returns 204 No Content on success or 404 if the course does not exist.")]
+public async Task<IActionResult> DeleteCourse(int id, CancellationToken ct)
+{
+    var deleted = await courseService.DeleteAsync(id, ct);
+    if (!deleted)
+    {
+        return NotFound(new ProblemDetails
+        {
+            Title = "Course not found",
+            Detail = $"Course with ID {id} was not found.",
+            Status = StatusCodes.Status404NotFound
+        });
+    }
+
+    return NoContent();
+}
 }

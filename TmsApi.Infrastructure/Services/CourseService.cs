@@ -127,5 +127,17 @@ public class CourseService(TmsDbContext context, ILogger<CourseService> logger) 
 
         return await GetByIdAsync(course.Id, ct);
     }
+
+    public async Task<bool> DeleteAsync(int id, CancellationToken ct)
+    {
+        var course = await context.Courses.FirstOrDefaultAsync(c => c.Id == id, ct);
+        if (course is null) return false;
+
+        context.Courses.Remove(course);
+        await context.SaveChangesAsync(ct);
+
+        logger.LogInformation("Deleted course {CourseId} ({Code})", course.Id, course.Code);
+        return true;
+    }
 }
 

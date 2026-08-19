@@ -19,6 +19,7 @@ using TmsApi.Api.ExceptionHandlers;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using TmsApi.Api.RateLimiting;
+using TmsApi.Api.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TmsApi.Infrastructure.Transcripts;
 using System.Threading.Channels;
@@ -40,6 +41,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 
 const string ServiceName = "tms-api";
 
@@ -82,6 +84,10 @@ builder.Services.AddIdentityCore<TmsUser>(options =>
 .AddEntityFrameworkStores<TmsDbContext>();
 
 builder.Services.AddAuthorization();
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("CanEditCourse", policy =>
+        policy.Requirements.Add(new CourseInstructorRequirement()));
+builder.Services.AddSingleton<IAuthorizationHandler, CourseInstructorHandler>();
 
 builder.Services.AddHybridCache(options =>
 {
@@ -152,6 +158,13 @@ builder.Services.AddDbContext<TmsDbContext>(options =>
 
 builder.Services.AddRateLimiter(options =>
 {
+    options.AddFixedWindowLimiter("AuthLimiter", opt =>
+    {
+        opt.PermitLimit = 5;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueLimit = 0;
+    });
+
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
     {
         var (partitionKey, tier) = ApiKeyResolver.Resolve(httpContext);
@@ -395,6 +408,14 @@ app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseHttpsRedirection();
 app.UseRouting();
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    context.Response.Headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';";
+    await next();
+});
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();

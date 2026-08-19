@@ -109,7 +109,7 @@ export class Login {
 
     try {
       await this.authService.login({ email: this.email, password: this.password });
-      await this.router.navigate(['/']); // Redirect to home/dashboard on successful login
+      await this.router.navigate(['/dashboard']);
     } catch (err: any) {
       this.errorMessage.set(err?.error?.detail || 'Invalid login credentials.');
     } finally {

@@ -4,6 +4,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using TmsApi.Domain.Entities;
 using TmsApi.Infrastructure.Services;
@@ -80,6 +81,7 @@ public class AuthController : ControllerBase
     public record LoginRequest(string Email, string Password);
 
     [HttpPost("login")]
+    [EnableRateLimiting("AuthLimiter")]
     [AllowAnonymous]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {

@@ -109,7 +109,15 @@ export class Login {
 
     try {
       await this.authService.login({ email: this.email, password: this.password });
-      await this.router.navigate(['/dashboard']);
+
+      const role = this.authService.currentUser()?.role;
+      const destination = role === 'Admin'
+        ? '/admin/courses'
+        : role === 'Instructor'
+          ? '/dashboard'
+          : '/student-dashboard';
+
+      await this.router.navigate([destination]);
     } catch (err: any) {
       this.errorMessage.set(err?.error?.detail || 'Invalid login credentials.');
     } finally {

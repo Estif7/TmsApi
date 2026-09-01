@@ -8,27 +8,28 @@ import { Enrollment } from '../../../models/enrollment.model';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './course-roster.html',
-  styleUrl: './course-roster.scss'
+  styleUrl: './course-roster.scss',
 })
-
 export class CourseRosterComponent implements OnInit {
   readonly store = inject(EnrollmentStore);
-  
-  // Pagination configuration
   readonly pageSize = 5;
-  // Tracks current page index per course ID: { [courseId: number]: pageIndex }
-  pageMap = signal<{ [key: number]: number }>({});
-  
+
+  // Key-value store: { courseId: pageIndex }
+  readonly pageState = signal<Record<number, number>>({});
+
   ngOnInit(): void {
     if (this.store.entities().length === 0) {
       this.store.loadEnrollments();
     }
   }
 
-  // Slice roster for the active page
+  getPageIndex(courseId: number): number {
+    return this.pageState()[courseId] ?? 0;
+  }
+
   getPagedStudents(courseId: number, students: Enrollment[]): Enrollment[] {
-    const page = this.pageMap()[courseId] || 0;
-    const start = page * this.pageSize;
+    const pageIndex = this.getPageIndex(courseId);
+    const start = pageIndex * this.pageSize;
     return students.slice(start, start + this.pageSize);
   }
 
@@ -36,12 +37,20 @@ export class CourseRosterComponent implements OnInit {
     return Math.ceil(students.length / this.pageSize) || 1;
   }
 
-  getCurrentPage(courseId: number): number {
-    return (this.pageMap()[courseId] || 0) + 1;
+  getPageNumber(courseId: number): number {
+    return this.getPageIndex(courseId) + 1;
   }
 
-  setPage(courseId: number, pageIndex: number): void {
-    this.pageMap.update((map) => ({ ...map, [courseId]: pageIndex }));
+  changePage(courseId: number, delta: number, totalPages: number): void {
+    const current = this.getPageIndex(courseId);
+    const target = current + delta;
+
+    if (target >= 0 && target < totalPages) {
+      this.pageState.update((prev) => ({
+        ...prev,
+        [courseId]: target
+      }));
+    }
   }
 
   onApprove(id: number): void {

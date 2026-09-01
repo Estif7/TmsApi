@@ -5,4 +5,7 @@ public record EnrollmentResponseDto(
     int CourseId,
     int StudentId,
     DateTime EnrolledAt,
-    string Status);
+    string Status,
+    string? CourseName = null,
+    string? StudentName = null
+);

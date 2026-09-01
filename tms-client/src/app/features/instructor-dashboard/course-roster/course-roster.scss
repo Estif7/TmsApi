@@ -1,0 +1,84 @@
+.roster-container {
+  padding: 1.5rem;
+
+  h2 {
+    font-size: 1.5rem;
+    color: #1e293b;
+    margin-bottom: 1.25rem;
+  }
+}
+
+.course-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+  .course-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    h3 {
+      font-size: 1.125rem;
+      margin: 0;
+      color: #0f172a;
+    }
+
+    .count-badge {
+      background-color: #f1f5f9;
+      color: #475569;
+      font-size: 0.85rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+  }
+}
+
+.roster-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th, td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  th {
+    background-color: #f8fafc;
+    color: #64748b;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+
+    &.pending { background-color: #fef3c7; color: #92400e; }
+    &.approved { background-color: #d1fae5; color: #065f46; }
+    &.rejected { background-color: #fee2e2; color: #991b1b; }
+  }
+
+  .btn-approve, .btn-reject {
+    border: none;
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    margin-right: 0.5rem;
+    font-weight: 500;
+  }
+
+  .btn-approve { background-color: #10b981; color: white; }
+  .btn-reject { background-color: #ef4444; color: white; }
+  .text-muted { color: #94a3b8; font-size: 0.85rem; }
+}

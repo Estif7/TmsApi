@@ -96,7 +96,10 @@ public class EnrollmentService(
                 e.CourseId,
                 e.StudentId,
                 e.EnrolledAt,
-                e.Status ?? "Pending"))
+                e.Status ?? "Pending",
+                e.Course.Title, // Or e.Course.Name depending on your Course entity property
+                e.Student.Name
+            ))
             .ToListAsync(ct);
 
     public async Task<bool> ApproveAsync(int id, CancellationToken ct)

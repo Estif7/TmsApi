@@ -26,7 +26,31 @@ export const EnrollmentStore = signalStore(
     pendingCount: computed(
       () => store.entities().filter((e) => e.status === 'Pending').length
     ),
+    rosterByCourse: computed(() => {
+      const map = new Map<
+        number,
+        { courseId: number; courseName: string; students: Enrollment[] }
+      >();
+
+      for (const item of store.entities()) {
+        const id = item.courseId;
+        // Fallback name if API property was missing or empty
+        const name = item.courseName || `Course #${id}`;
+
+        if (!map.has(id)) {
+          map.set(id, {
+            courseId: id,
+            courseName: name,
+            students: [],
+          });
+        }
+        map.get(id)!.students.push(item);
+      }
+
+      return Array.from(map.values());
+    }),
   })),
+  
   withMethods(
     (
       store,

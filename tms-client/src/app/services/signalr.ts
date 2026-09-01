@@ -15,7 +15,9 @@ export class SignalrService {
 
   startConnection(): void {
     this.hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl('/hubs/enrollments')
+      .withUrl('/hubs/enrollments', {
+        accessTokenFactory: () => localStorage.getItem('access_token') || ''
+      })
       .withAutomaticReconnect()
       .build();
 
@@ -24,8 +26,7 @@ export class SignalrService {
       .then(() => console.log('SignalR Hub Connection Established'))
       .catch((err) => console.error('Error connecting to SignalR Hub:', err));
 
-    this.hubConnection.on('EnrollmentStatusUpdated', (data: EnrollmentUpdatedMessage) => {
-      this.latestUpdate.set(data);
+  this.hubConnection.on('ReceiveEnrollmentUpdate', (data: EnrollmentUpdatedMessage) => {      this.latestUpdate.set(data);
     });
   }
 }

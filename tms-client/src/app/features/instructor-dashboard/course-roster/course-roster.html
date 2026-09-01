@@ -1,0 +1,43 @@
+<div class="roster-container">
+  <h2>Course Enrolled Rosters</h2>
+
+  <div *ngIf="store.isLoading()" class="loading">Loading course rosters...</div>
+
+  <div *ngFor="let group of store.rosterByCourse()" class="course-card">
+    <div class="course-header">
+      <h3>{{ group.courseName }}</h3>
+      <span class="count-badge">{{ group.students.length }} Enrolled</span>
+    </div>
+
+    <table class="roster-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Student Name</th>
+          <th>Enrolled Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let student of group.students">
+          <td>#{{ student.id }}</td>
+          <td>{{ student.studentName }}</td>
+          <td>{{ student.enrolledAt | date:'mediumDate' }}</td>
+          <td>
+            <span class="badge" [ngClass]="student.status.toLowerCase()">
+              {{ student.status }}
+            </span>
+          </td>
+          <td>
+            <ng-container *ngIf="student.status === 'Pending'">
+              <button (click)="onApprove(student.id)" class="btn-approve">Approve</button>
+              <button (click)="onReject(student.id)" class="btn-reject">Reject</button>
+            </ng-container>
+            <span *ngIf="student.status !== 'Pending'" class="text-muted">Completed</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

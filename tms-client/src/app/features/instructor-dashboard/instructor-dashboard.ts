@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EnrollmentStore } from '../../store/enrollment.store';
 import { AnalyticsChart } from '../../ui/analytics-chart/analytics-chart';
+import { CourseRosterComponent } from './course-roster/course-roster';
 
 @Component({
   selector: 'app-instructor-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, AnalyticsChart],
+  imports: [CommonModule, FormsModule, AnalyticsChart, CourseRosterComponent], // <-- Add here
   templateUrl: './instructor-dashboard.html',
   styleUrl: './instructor-dashboard.scss'
 })

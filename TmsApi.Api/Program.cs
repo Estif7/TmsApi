@@ -439,6 +439,7 @@ app.Use(async (context, next) =>
 
 app.MapControllers();
 app.MapHub<TmsHub>("/hubs/tms");
+app.MapHub<EnrollmentHub>("/hubs/enrollments");
 
 if (app.Environment.IsDevelopment())
 {
@@ -517,6 +518,6 @@ app.MapPost("/fake/certificates", async () =>
     return Results.Ok(new { Status = "issued", Attempt = n });
 }).WithTags("lab-fixtures").DisableRateLimiting();
 
-app.MapHub<TmsApi.Api.Hubs.EnrollmentHub>("/hubs/enrollments");
+// app.MapHub<TmsApi.Api.Hubs.EnrollmentHub>("/hubs/enrollments");
 
 app.Run();

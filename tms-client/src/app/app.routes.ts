@@ -32,7 +32,7 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    canActivate: [authGuard],
+    canActivate: [authGuard, roleGuard('Instructor')],
     loadComponent: () =>
       import('./features/instructor-dashboard/instructor-dashboard')
         .then(m => m.InstructorDashboard)
@@ -46,10 +46,10 @@ export const routes: Routes = [
   },
   {
     path: 'admin/courses',
-    canActivate: [roleGuard('Admin')],
+    canActivate: [authGuard, roleGuard('Admin')],
     loadComponent: () =>
-      import('./features/instructor-dashboard/instructor-dashboard')
-        .then(m => m.InstructorDashboard)
+      import('./features/admin-dashboard/admin-dashboard') // Create dedicated admin view here
+        .then(m => m.AdminDashboard)
   },
   {
     path: 'unauthorized',

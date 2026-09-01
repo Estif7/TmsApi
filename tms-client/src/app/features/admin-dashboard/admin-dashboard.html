@@ -1,0 +1,78 @@
+<div class="admin-container">
+  <h1>Admin Management Panel</h1>
+
+  <div *ngIf="errorMessage()" class="alert-error">
+    {{ errorMessage() }}
+  </div>
+
+  <div class="grid-layout">
+    <!-- Course Creation Form -->
+    <section class="card form-card">
+      <h2>Create New Course</h2>
+      <form [formGroup]="courseForm" (ngSubmit)="onCreateCourse()">
+        <div class="form-group">
+          <label for="code">Course Code</label>
+          <input 
+            id="code" 
+            type="text" 
+            formControlName="code" 
+            placeholder="e.g. CS-101" 
+          />
+          <small *ngIf="courseForm.controls.code.touched && courseForm.controls.code.errors?.['pattern']" class="text-error">
+            Code must match format 'XXX-000' (e.g. CS-101)
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label for="title">Course Title</label>
+          <input id="title" type="text" formControlName="title" placeholder="Course Name" />
+        </div>
+
+        <div class="form-group">
+          <label for="maxCapacity">Maximum Capacity</label>
+          <input id="maxCapacity" type="number" formControlName="maxCapacity" />
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" formControlName="description" rows="3"></textarea>
+        </div>
+
+        <button type="submit" [disabled]="courseForm.invalid" class="btn-primary">
+          Add Course
+        </button>
+      </form>
+    </section>
+
+    <!-- Active Courses Management Grid -->
+    <section class="card table-card">
+      <h2>Active Courses Catalog</h2>
+
+      <div *ngIf="isLoading()" class="loading">Loading courses...</div>
+
+      <table *ngIf="!isLoading()" class="admin-table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Title</th>
+            <th>Capacity</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let course of courses()">
+            <td><strong>{{ course.code }}</strong></td>
+            <td>{{ course.title }}</td>
+            <td>{{ course.maxCapacity }} Seats</td>
+            <td>
+              <button (click)="onDeleteCourse(course.id)" class="btn-delete">Delete</button>
+            </td>
+          </tr>
+          <tr *ngIf="courses().length === 0">
+            <td colspan="4" class="text-center">No courses found. Create one above!</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</div>

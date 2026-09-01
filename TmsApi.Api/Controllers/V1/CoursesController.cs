@@ -99,23 +99,34 @@ public class CoursesController(
 
     [HttpDelete("{id:int}")]
     [IgnoreAntiforgeryToken]
-[ProducesResponseType(StatusCodes.Status204NoContent)]
-[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-[EndpointSummary("Delete a course by ID")]
-[EndpointDescription("Deletes the specified course. Returns 204 No Content on success or 404 if the course does not exist.")]
-public async Task<IActionResult> DeleteCourse(int id, CancellationToken ct)
-{
-    var deleted = await courseService.DeleteAsync(id, ct);
-    if (!deleted)
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteCourse(int id, CancellationToken ct)
     {
-        return NotFound(new ProblemDetails
+        try
         {
-            Title = "Course not found",
-            Detail = $"Course with ID {id} was not found.",
-            Status = StatusCodes.Status404NotFound
-        });
-    }
+            var deleted = await courseService.DeleteAsync(id, ct);
+            if (!deleted)
+            {
+                return NotFound(new ProblemDetails
+                {
+                    Title = "Course not found",
+                    Detail = $"Course with ID {id} was not found.",
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
 
-    return NoContent();
-}
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Cannot delete course",
+                Detail = ex.Message,
+                Status = StatusCodes.Status400BadRequest
+            });
+        }
+    }
 }

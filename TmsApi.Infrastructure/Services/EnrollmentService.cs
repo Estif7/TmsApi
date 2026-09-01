@@ -113,4 +113,17 @@ public class EnrollmentService(
         logger.LogInformation("Enrollment {Id} status set to Approved in DB", id);
         return true;
     }
+
+    public async Task<bool> RejectAsync(int id, CancellationToken ct)
+    {
+        var enrollment = await context.Enrollments.FindAsync([id], ct);
+        if (enrollment is null) return false;
+
+        enrollment.Status = "Rejected";
+        context.Entry(enrollment).Property(e => e.Status).IsModified = true;
+
+        await context.SaveChangesAsync(ct);
+        logger.LogInformation("Enrollment {Id} status set to Rejected in DB", id);
+        return true;
+    }
 }

@@ -40,4 +40,8 @@ public interface IEnrollmentService
     Task<bool> ApproveAsync(
         int id,
         CancellationToken ct);
+
+    Task<bool> RejectAsync(
+        int id,
+        CancellationToken ct);
 }

@@ -1,45 +1,86 @@
-<!-- <div class="dashboard-header">
-  <h1>Instructor Command Center</h1>
-  <div class="kpi-row">
-    <div class="kpi-card">
-      <span class="kpi-value">{{ store.entities().length }}</span>
-      <span class="kpi-label">Total Enrollments</span>
-    </div>
-    <div class="kpi-card pending">
-      <span class="kpi-value">{{ store.pendingCount() }}</span>
-      <span class="kpi-label">Pending Approval</span>
-    </div>
+<div class="dashboard-container">
+  <!-- Analytics Visualizer -->
+  <section class="analytics-section">
+    <tms-analytics-chart [data]="store.entities()"></tms-analytics-chart>
+  </section>
+
+  <!-- Notification Banner for Server Errors -->
+  <div *ngIf="store.error()" class="error-banner">
+    {{ store.error() }}
   </div>
+
+  <!-- Main Roster Control Section -->
+  <section class="roster-section">
+    <div class="header-actions">
+      <div>
+        <h2>Student Roster</h2>
+        <span class="pending-badge" *ngIf="store.pendingCount() > 0">
+          {{ store.pendingCount() }} Pending Approvals
+        </span>
+      </div>
+
+      <!-- Quick Filter Options -->
+      <div class="filter-controls">
+        <label>Filter Status: </label>
+        <select [ngModel]="filterStatus()" (ngModelChange)="filterStatus.set($event)">
+          <option value="All">All</option>
+          <option value="Pending">Pending</option>
+          <option value="Approved">Approved</option>
+          <option value="Rejected">Rejected</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="store.isLoading()" class="loading-spinner">
+      Loading enrollments...
+    </div>
+
+    <!-- Data Grid -->
+    <table *ngIf="!store.isLoading()" class="roster-table">
+      <thead>
+        <tr>
+          <th>Enrollment ID</th>
+          <th>Student Name</th>
+          <th>Course</th>
+          <th>Enrolled Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of filteredEnrollments()">
+          <td>#{{ item.id }}</td>
+          <td>{{ item.studentName }}</td>
+          <td>{{ item.courseName }}</td>
+          <td>{{ item.enrolledAt | date:'mediumDate' }}</td>
+          <td>
+            <span class="badge" [ngClass]="item.status.toLowerCase()">
+              {{ item.status }}
+            </span>
+          </td>
+          <td>
+            <ng-container *ngIf="item.status === 'Pending'">
+              <button 
+                (click)="onApprove(item.id)" 
+                class="btn-approve">
+                Approve
+              </button>
+              <button 
+                (click)="onReject(item.id)" 
+                class="btn-reject">
+                Reject
+              </button>
+            </ng-container>
+            <span *ngIf="item.status !== 'Pending'" class="text-muted">
+              Completed
+            </span>
+          </td>
+        </tr>
+        <tr *ngIf="filteredEnrollments().length === 0">
+          <td colspan="6" class="empty-state">No records matching the selected status.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
 </div>
-
-<div class="chart-section">
-  @defer (on viewport; prefetch on idle(500)) {
-    <tms-analytics-chart [data]="store.entities()" />
-  } @placeholder {
-    <div class="skeleton-chart">Scroll down to view analytics...</div>
-  } @loading (minimum 500ms) {
-    <div class="spinner">Downloading chart engine...</div>
-  } @error {
-    <p>Failed to load chart. Check your connection.</p>
-  }
-</div> -->
-
-<section class="mt-8">
-  <h2 class="text-xl font-bold text-white mb-4">Performance Overview</h2>
-
-  @defer (on viewport) {
-    <tms-analytics-chart [data]="store.entities()" />
-  } @placeholder (minimum 500ms) {
-    <div class="p-6 bg-slate-900/50 border border-slate-800 rounded-xl animate-pulse text-slate-400">
-      Scroll to load analytics chart...
-    </div>
-  } @loading {
-    <div class="p-6 bg-slate-900 border border-slate-800 rounded-xl text-indigo-400">
-      Loading chart bundle...
-    </div>
-  } @error {
-    <div class="p-6 bg-red-950/30 border border-red-800 rounded-xl text-red-400">
-      Failed to load analytics module.
-    </div>
-  }
-</section>

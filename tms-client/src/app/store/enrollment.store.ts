@@ -90,6 +90,31 @@ export const EnrollmentStore = signalStore(
         )
       ),
 
+  rejectEnrollment: rxMethod<number>(
+    pipe(
+      tap((id) => {
+        // Optimistic update using NgRx entities helper
+        patchState(
+          store,
+          updateEntity({ id, changes: { status: 'Rejected' } })
+        );
+      }),
+      switchMap((id) =>
+        api.reject(id).pipe(
+          catchError(() => {
+            // Rollback state if server request fails
+            patchState(
+              store,
+              updateEntity({ id, changes: { status: 'Pending' } }),
+              { error: 'Server rejected the request.' }
+            );
+            return EMPTY;
+          })
+        )
+      )
+    )
+  ),
+
       // Real-time listener method
       handleRealtimeUpdate(update: {
         enrollmentId: number;

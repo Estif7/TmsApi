@@ -1,0 +1,414 @@
+<div class="login-page">
+
+  <!-- ==========================================
+       BRAND PANEL
+       ========================================== -->
+  <section class="brand-panel">
+
+    <div class="brand-content">
+
+      <!-- Logo -->
+      <div class="brand-logo">
+        <div class="logo-icon">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+
+        <div>
+          <div class="brand-name">TMS</div>
+          <div class="brand-subtitle">
+            Training Management System
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Hero -->
+      <div class="hero-content">
+
+        <div class="eyebrow">
+          <span class="eyebrow-dot"></span>
+          SECURE PORTAL
+        </div>
+
+        <h1>
+          Learn, teach,
+          <span>grow.</span>
+        </h1>
+
+        <p>
+          One powerful platform connecting students,
+          instructors, and administrators to make
+          training simple, organized, and effective.
+        </p>
+
+      </div>
+
+
+      <!-- Features -->
+      <div class="feature-list">
+
+        <div class="feature">
+          <div class="feature-icon">✓</div>
+
+          <div>
+            <strong>Everything in one place</strong>
+            <span>
+              Courses, learning, and training management
+            </span>
+          </div>
+        </div>
+
+
+        <div class="feature">
+          <div class="feature-icon">✓</div>
+
+          <div>
+            <strong>Built for every role</strong>
+            <span>
+              Students, instructors, and administrators
+            </span>
+          </div>
+        </div>
+
+
+        <div class="feature">
+          <div class="feature-icon">✓</div>
+
+          <div>
+            <strong>Secure & reliable</strong>
+            <span>
+              Your account and learning data stay protected
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- Footer -->
+      <div class="brand-footer">
+        © 2026 TMS. All rights reserved.
+      </div>
+
+    </div>
+
+
+    <!-- Decorative elements -->
+    <div class="orb orb-one"></div>
+    <div class="orb orb-two"></div>
+    <div class="grid-pattern"></div>
+
+  </section>
+
+
+  <!-- ==========================================
+       LOGIN PANEL
+       ========================================== -->
+  <main class="login-panel">
+
+    <div class="login-card">
+
+      <!-- Mobile logo -->
+      <div class="mobile-logo">
+
+        <div class="logo-icon small">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+
+        <span>TMS</span>
+
+      </div>
+
+
+      <!-- Header -->
+      <div class="login-header">
+
+        <div class="welcome-badge">
+          👋
+        </div>
+
+        <h2>Welcome back</h2>
+
+        <p>
+          Sign in to continue to your TMS account.
+        </p>
+
+      </div>
+
+
+      <!-- Error -->
+      @if (errorMessage()) {
+
+        <div class="error-banner" role="alert">
+
+          <div class="error-icon">
+            !
+          </div>
+
+          <div>
+            <strong>Login unsuccessful</strong>
+
+            <span>
+              {{ errorMessage() }}
+            </span>
+          </div>
+
+        </div>
+
+      }
+
+
+      <!-- Form -->
+      <form
+        #loginForm="ngForm"
+        (ngSubmit)="onSubmit()"
+        novalidate
+      >
+
+        <!-- Email -->
+        <div class="form-group">
+
+          <label for="email">
+            Email address
+          </label>
+
+          <div class="input-wrapper">
+
+            <svg
+              class="input-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <rect
+                x="3"
+                y="5"
+                width="18"
+                height="14"
+                rx="2"
+              />
+
+              <path d="m3 7 9 6 9-6" />
+            </svg>
+
+            <input
+              id="email"
+              type="email"
+              name="email"
+              [(ngModel)]="email"
+              required
+              autocomplete="email"
+              placeholder="you@example.com"
+            />
+
+          </div>
+
+        </div>
+
+
+        <!-- Password -->
+        <div class="form-group">
+
+          <div class="password-label-row">
+
+            <label for="password">
+              Password
+            </label>
+
+            <!-- <button
+              type="button"
+              class="forgot-link"
+              (click)="forgotPassword()"
+            >
+              Forgot password?
+            </button> -->
+
+          </div>
+
+
+          <div class="input-wrapper">
+
+            <svg
+              class="input-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <rect
+                x="4"
+                y="10"
+                width="16"
+                height="11"
+                rx="2"
+              />
+
+              <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+            </svg>
+
+
+            <input
+              id="password"
+              [type]="showPassword() ? 'text' : 'password'"
+              name="password"
+              [(ngModel)]="password"
+              required
+              autocomplete="current-password"
+              placeholder="Enter your password"
+            />
+
+
+            <button
+              type="button"
+              class="password-toggle"
+              (click)="togglePassword()"
+              [attr.aria-label]="
+                showPassword()
+                  ? 'Hide password'
+                  : 'Show password'
+              "
+            >
+
+              @if (showPassword()) {
+
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                >
+                  <path
+                    d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"
+                  />
+
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="3"
+                  />
+                </svg>
+
+              } @else {
+
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                >
+                  <path d="M3 3l18 18" />
+
+                  <path
+                    d="M10.6 10.6a2 2 0 0 0 2.8 2.8"
+                  />
+
+                  <path
+                    d="M9.9 5.2A10.5 10.5 0 0 1 12 5c6.5 0 10 7 10 7a17.8 17.8 0 0 1-3.1 4.1"
+                  />
+
+                  <path
+                    d="M6.2 6.2C3.4 8.1 2 12 2 12s3.5 7 10 7a10 10 0 0 0 3.3-.6"
+                  />
+                </svg>
+
+              }
+
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- Remember me -->
+        <!-- <div class="options-row">
+
+          <label class="remember-me">
+
+            <input
+              type="checkbox"
+              name="rememberMe"
+              [(ngModel)]="rememberMe"
+            />
+
+            <span class="custom-checkbox"></span>
+
+            <span>
+              Remember me
+            </span>
+
+          </label>
+
+        </div> -->
+
+
+        <!-- Login button -->
+        <button
+          class="login-button"
+          type="submit"
+          [disabled]="loading() || loginForm.invalid"
+        >
+
+          @if (loading()) {
+
+            <span class="spinner"></span>
+
+            <span>
+              Signing you in...
+            </span>
+
+          } @else {
+
+            <span>
+              Sign in
+            </span>
+
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M5 12h14" />
+              <path d="m13 6 6 6-6 6" />
+            </svg>
+
+          }
+
+        </button>
+
+      </form>
+
+
+      <!-- Security -->
+      <div class="security-note">
+
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <path
+            d="M12 3 5 6v5c0 4.5 3 8.5 7 10 4-1.5 7-5.5 7-10V6l-7-3Z"
+          />
+
+          <path d="m9 12 2 2 4-4" />
+        </svg>
+
+        <!-- <span>
+          Your connection is secure and encrypted
+        </span> -->
+
+      </div>
+
+    </div>
+
+  </main>
+
+</div>

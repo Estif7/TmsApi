@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { Router } from '@angular/router';
 
 export interface TmsUser {
   email: string;
@@ -21,6 +22,7 @@ export interface AuthResponse {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
+  private router = inject(Router);
 
   // Synchronously initialize signals from localStorage
   private accessToken = signal<string | null>(localStorage.getItem('access_token'));
@@ -48,7 +50,10 @@ export class AuthService {
     );
 
     this.saveTokens(response.accessToken, response.refreshToken);
-    this.currentUser.set(this.buildUserFromToken(response.accessToken));
+    
+    // Update user signal immediately after successful login
+    const user = this.buildUserFromToken(response.accessToken);
+    this.currentUser.set(user);
   }
 
   async refresh(): Promise<void> {
@@ -69,6 +74,8 @@ export class AuthService {
     this.accessToken.set(null);
     this.refreshTokenSignal.set(null);
     this.currentUser.set(null);
+
+    this.router.navigate(['/login'], { replaceUrl: true });
   }
 
   private saveTokens(accessToken: string, refreshToken: string): void {
@@ -80,7 +87,9 @@ export class AuthService {
 
   private getInitialUser(): TmsUser | null {
     const token = localStorage.getItem('access_token');
-    if (!token) return null;
+    if (!token) {
+      return null; // Return null instead of the mock user
+    }
     try {
       return this.buildUserFromToken(token);
     } catch {

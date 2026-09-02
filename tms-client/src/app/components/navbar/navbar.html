@@ -3,6 +3,26 @@
     <a routerLink="/student-dashboard"><strong>TMS</strong> Portal</a>
   </div>
 
+  <nav class="tms-navbar" *ngIf="showNavbar()">
+    <div class="nav-brand">
+      <a routerLink="/dashboard">
+        <span class="logo-accent">TMS</span> Portal
+      </a>
+    </div>
+
+    <div class="nav-user" *ngIf="authService.currentUser() as user">
+      <div class="user-details">
+        <span class="user-name">{{ user.displayName }}</span>
+        <span class="user-role badge" [ngClass]="user.role.toLowerCase()">
+          {{ user.role }}
+        </span>
+      </div>
+      <button type="button" class="btn-logout" (click)="onLogout()">
+        Logout
+      </button>
+    </div>
+  </nav>
+
   <div class="nav-links">
     <a 
       *ngIf="auth.hasRole('Student')" 

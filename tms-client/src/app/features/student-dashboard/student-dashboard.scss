@@ -1,0 +1,109 @@
+.dashboard-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.student-banner {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #f8fafc;
+  padding: 2rem;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
+  .banner-welcome {
+    h1 {
+      margin: 0;
+      font-size: 1.75rem;
+      font-weight: 700;
+    }
+    p {
+      margin: 0.5rem 0 0;
+      color: #94a3b8;
+    }
+  }
+
+  .banner-metrics {
+    display: flex;
+    gap: 1.5rem;
+
+    .metric-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0.85rem 1.25rem;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+
+      .label {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-top: 0.25rem;
+        color: #38bdf8;
+
+        &.status-badge {
+          font-size: 0.85rem;
+          color: #fbbf24;
+          &.eligible {
+            color: #34d399;
+          }
+        }
+      }
+    }
+  }
+}
+
+.status-alert {
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 500;
+  &.success {
+    background-color: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+  }
+  &.error {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+}
+
+.catalog-section {
+  .section-header {
+    margin-bottom: 1.5rem;
+    h2 {
+      font-size: 1.5rem;
+      color: #0f172a;
+      margin: 0;
+    }
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+.loading-state, .error-state, .empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #64748b;
+}

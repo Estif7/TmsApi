@@ -41,16 +41,15 @@ export class Login {
         password: this.password
       });
 
-      const role = this.authService.currentUser()?.role;
+      const roles = this.authService.currentUser()?.role ?? [];
 
-      const destination =
-        role === 'Admin'
-          ? '/admin/courses'
-          : role === 'Instructor'
-            ? '/dashboard'
-            : '/student-dashboard';
+      // Determine redirect path by checking if the role array contains specific roles
+      const destination = roles.includes('Admin')
+        ? '/admin/courses'
+        : roles.includes('Instructor')
+          ? '/dashboard'
+          : '/student-dashboard';
 
-      // Added replaceUrl: true here
       await this.router.navigate([destination], { replaceUrl: true });
 
     } catch (err: any) {

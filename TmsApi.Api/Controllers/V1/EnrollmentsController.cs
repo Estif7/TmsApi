@@ -19,6 +19,18 @@ public class EnrollmentsController(IEnrollmentService enrollmentService) : Contr
         return Ok(result);
     }
 
+    [HttpPost("/api/v{version:apiVersion}/courses/{courseId:int}/enrollments")]
+    [ProducesResponseType(typeof(EnrollmentResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CreateEnrollment(
+        int courseId, 
+        [FromBody] EnrollStudentRequest request, 
+        CancellationToken ct)
+    {
+        var result = await enrollmentService.CreateAsync(courseId, request, ct);
+        return CreatedAtAction(nameof(GetAllEnrollments), new { id = result.Id }, result);
+    }
+
     [HttpPut("{id:int}/approve")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

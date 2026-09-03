@@ -18,6 +18,7 @@ public class CourseService(TmsDbContext context, ILogger<CourseService> logger) 
                 c.Id,
                 c.Code,
                 c.Title,
+                c.Credits,
                 c.MaxCapacity,
                 c.Enrollments.Count))
             .FirstOrDefaultAsync(ct);
@@ -32,6 +33,7 @@ public class CourseService(TmsDbContext context, ILogger<CourseService> logger) 
                 c.Id,
                 c.Code,
                 c.Title,
+                c.Credits,
                 c.MaxCapacity,
                 c.Enrollments.Count))
             .FirstOrDefaultAsync(ct);
@@ -45,6 +47,7 @@ public class CourseService(TmsDbContext context, ILogger<CourseService> logger) 
         {
             Code = request.Code,
             Title = request.Title,
+            Credits = request.Credits,
             MaxCapacity = request.MaxCapacity
         };
 
@@ -102,6 +105,7 @@ public class CourseService(TmsDbContext context, ILogger<CourseService> logger) 
                 c.Id,
                 c.Code,
                 c.Title,
+                c.Credits,
                 c.MaxCapacity,
                 c.Enrollments.Count))
             .ToListAsync(ct);
@@ -140,4 +144,3 @@ public class CourseService(TmsDbContext context, ILogger<CourseService> logger) 
         return true;
     }
 }
-

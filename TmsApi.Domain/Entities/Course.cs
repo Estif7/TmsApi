@@ -5,6 +5,7 @@ public class Course
     public int Id { get; set; } // surrogate primary key — internal, used by foreign keys
     public required string Code { get; set; } // natural key — human-readable (uniqueness configured in Session 2)
     public required string Title { get; set; }
+    public int Credits { get; set; }
     public int MaxCapacity { get; set; }
     public string? InstructorId { get; set; }
 

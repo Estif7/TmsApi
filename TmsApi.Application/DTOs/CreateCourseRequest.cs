@@ -16,4 +16,7 @@ public record CreateCourseRequest
 
     [Range(1, 200)]
     public int MaxCapacity { get; init; }
+
+    [Range(1, 10)]
+    public int Credits { get; init; }
 }

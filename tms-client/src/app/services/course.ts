@@ -18,10 +18,10 @@ export class CourseService {
       .get<PagedResponse<Course>>(this.baseUrl, {
         params: {
           page: '1',
-          pageSize: '50'
+          pageSize: '200'
         }
       })
-      .pipe(map((p) => p.items));
+      .pipe(map((p) => p.items ?? []));
   }
 
   getById(id: string) {

@@ -33,32 +33,73 @@
     </div>
   }
 
-  <!-- Catalog Grid Section -->
-  <section class="catalog-section">
-    <header class="section-header">
-      <h2>Available Course Catalog</h2>
-    </header>
+<!-- Course Catalog -->
+<section class="catalog-section">
+  <div class="catalog-header">
+    <div class="catalog-title">
+      <span class="eyebrow">COURSE CATALOG</span>
 
-    @if (coursesResource.isLoading()) {
-      <div class="loading-state">
-        <div class="spinner"></div>
-        <p>Fetching courses from the server...</p>
-      </div>
-    } @else if (coursesResource.error()) {
-      <div class="error-state">
-        <p>Could not load courses. Make sure your backend service is online.</p>
-      </div>
-    } @else {
-      <div class="grid">
-        @for (course of coursesResource.value()!; track course.id) {
-          <tms-course-card
-            [course]="course"
-            (enrollClicked)="enroll(course)"
-          />
-        } @empty {
-          <p class="empty-state">No courses are available this term.</p>
-        }
+      <h2>Explore available courses</h2>
+
+      <p>
+        Discover courses and build your academic path.
+      </p>
+    </div>
+
+    @if (!coursesResource.isLoading() && !coursesResource.error()) {
+      <div class="course-count">
+        <strong>{{ coursesList().length }}</strong>
+        <span>courses available</span>
       </div>
     }
-  </section>
+  </div>
+
+  @if (coursesResource.isLoading()) {
+    <div class="catalog-state loading-state">
+      <div class="loading-icon">
+        <div class="spinner"></div>
+      </div>
+
+      <h3>Loading courses</h3>
+      <p>Fetching the latest course catalog...</p>
+    </div>
+  }
+
+  @else if (coursesResource.error()) {
+    <div class="catalog-state error-state">
+      <div class="state-icon error-icon">!</div>
+
+      <h3>Unable to load courses</h3>
+
+      <p>
+        We couldn't retrieve the course catalog.
+        Please try again later.
+      </p>
+    </div>
+  }
+
+  @else {
+    <div class="course-grid">
+      @for (course of coursesList(); track course.id) {
+        <tms-course-card
+          [course]="course"
+          (enrollClicked)="enroll(course)"
+        />
+      }
+
+      @empty {
+        <div class="catalog-state empty-state">
+          <div class="state-icon">📚</div>
+
+          <h3>No courses available</h3>
+
+          <p>
+            There aren't any courses available right now.
+            Check back again soon.
+          </p>
+        </div>
+      }
+    </div>
+  }
+</section>
 </div>

@@ -1,54 +1,60 @@
-<nav class="navbar" *ngIf="auth.currentUser()">
-  <div class="brand">
-    <a routerLink="/student-dashboard"><strong>TMS</strong> Portal</a>
+<nav class="tms-navbar" *ngIf="showNavbar()">
+  <!-- Brand -->
+  <div class="nav-brand">
+    <a
+      href="#"
+      (click)="$event.preventDefault(); goBack()"
+      class="brand-link"
+      aria-label="Go back to TMS Portal"
+    >
+      <span class="brand-mark">T</span>
+      <span class="brand-text">
+        <span class="logo-accent">TMS</span>
+        <span class="portal-text">Portal</span>
+      </span>
+    </a>
   </div>
 
-  <nav class="tms-navbar" *ngIf="showNavbar()">
-    <div class="nav-brand">
-      <a routerLink="/dashboard">
-        <span class="logo-accent">TMS</span> Portal
-      </a>
-    </div>
+  <!-- User -->
+  <div class="nav-user" *ngIf="authService.currentUser() as user">
+    <div class="user-profile">
+      <div class="user-avatar">
+        {{ user.displayName?.charAt(0)?.toUpperCase() || 'U' }}
+      </div>
 
-    <div class="nav-user" *ngIf="authService.currentUser() as user">
       <div class="user-details">
         <span class="user-name">{{ user.displayName }}</span>
-        <span class="user-role badge" [ngClass]="user.role.toLowerCase()">
-          {{ user.role }}
+        <span class="user-status">
+          <span class="status-dot"></span>
+          Online
         </span>
       </div>
-      <button type="button" class="btn-logout" (click)="onLogout()">
-        Logout
-      </button>
     </div>
-  </nav>
 
-  <div class="nav-links">
-    <a 
-      *ngIf="auth.hasRole('Student')" 
-      routerLink="/student-dashboard" 
-      routerLinkActive="active">
-      Student Dashboard
-    </a>
-    <a 
-      *ngIf="auth.hasRole('Instructor')" 
-      routerLink="/dashboard" 
-      routerLinkActive="active">
-      Instructor Dashboard
-    </a>
-    <a 
-      *ngIf="auth.hasRole('Admin')" 
-      routerLink="/admin/courses" 
-      routerLinkActive="active">
-      Admin Panel
-    </a>
-  </div>
+    <div class="nav-divider"></div>
 
-  <div class="user-profile">
-    <div class="user-info">
-      <span class="username">{{ auth.currentUser()?.displayName }}</span>
-      <span class="role-badge">{{ auth.currentUser()?.role }}</span>
-    </div>
-    <button (click)="logout()" class="btn-logout">Logout</button>
+    <button
+      type="button"
+      class="btn-logout"
+      (click)="onLogout()"
+      aria-label="Logout"
+    >
+      <svg
+        width="17"
+        height="17"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+        <polyline points="16 17 21 12 16 7"></polyline>
+        <line x1="21" y1="12" x2="9" y2="12"></line>
+      </svg>
+
+      <span>Logout</span>
+    </button>
   </div>
 </nav>

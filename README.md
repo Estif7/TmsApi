@@ -1,16 +1,3 @@
-Yes. The problem is most likely the **image filenames in the README don't match the actual filenames**. Your current README also references six screenshots, while the files you provided are five PNG files.
-
-Since your images are in the **same directory as `README.md`**, the cleanest approach is to use simple relative paths:
-
-```markdown
-![Login Portal](./Macbook-Air-localhost-0.png)
-```
-
-rather than the old `.jpg` filenames.
-
-Here is a rewritten version of your README using the filenames of the images you provided:
-
-````markdown
 # Training Management System (TMS)
 
 An enterprise-grade full-stack **Training Management System (TMS)** designed to streamline course registration, enrollment processing, and academic progress tracking.
@@ -96,11 +83,11 @@ Built with **ASP.NET Core Web API** and **Angular 19**, the platform provides a 
 
 ### Login Portal
 
-![TMS Login Portal](./Macbook-Air-localhost-0.png)
+![TMS Login Portal](Macbook-Air-localhost-0.png)
 
 ### Registration Portal
 
-![TMS Registration Portal](./Macbook-Air-localhost-1.png)
+![TMS Registration Portal](Macbook-Air-localhost-1.png)
 
 ---
 

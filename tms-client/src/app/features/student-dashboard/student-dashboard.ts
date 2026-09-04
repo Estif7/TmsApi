@@ -93,16 +93,14 @@ coursesList = computed<Course[]>(() => {
     this.earnedCredits() >= 120 ? 'Eligible for Graduation' : 'In Progress'
   );
 
-  constructor() {
-    this.store.loadEnrollments();
+constructor() {
+  this.store.loadEnrollments();
 
-    effect(() => {
+  effect(() => {
     console.log('--- DASHBOARD DEBUG ---');
     console.log('Raw Store Entities:', this.store.entities());
-    console.log('Raw Courses Resource:', this.coursesResource.value());
-    console.log('Extracted Courses List:', this.coursesList());
   });
-  }
+}
 
   async enroll(course: Course): Promise<void> {
     if (this.isEnrolling()) return;

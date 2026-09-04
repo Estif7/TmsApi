@@ -16,6 +16,14 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+}
+
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
@@ -36,7 +44,6 @@ export class AuthService {
     return this.accessToken();
   }
 
-  // FIX 1: Safely handle role comparisons when user.role is an array of strings
   hasRole(role: string): boolean {
     const user = this.currentUser();
     if (!user || !user.role) return false;
@@ -51,9 +58,27 @@ export class AuthService {
 
     this.saveTokens(response.accessToken, response.refreshToken);
 
-    // Update user signal immediately after successful login
     const user = this.buildUserFromToken(response.accessToken);
     this.currentUser.set(user);
+  }
+
+async register(data: { fullName: string; email: string; password: string; role?: string }): Promise<void> {
+    // Split full name into FirstName and LastName to match C# backend DTO
+    const nameParts = data.fullName.trim().split(' ');
+    const firstName = nameParts[0] || 'User';
+    const lastName = nameParts.slice(1).join(' ') || 'Student';
+
+    const payload: RegisterRequest = {
+      email: data.email,
+      password: data.password,
+      firstName: firstName,
+      lastName: lastName,
+      role: data.role || 'Student',
+    };
+
+    await firstValueFrom(
+      this.http.post<void>('/api/Auth/register', payload)
+    );
   }
 
   async refresh(): Promise<void> {
@@ -98,42 +123,40 @@ export class AuthService {
   }
 
   private buildUserFromToken(token: string): TmsUser {
-  const payload = this.decodePayload(token);
+    const payload = this.decodePayload(token);
 
-  // Read standard Microsoft/JWT claims
-  const roleClaim =
-    payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ??
-    payload['role'];
+    const roleClaim =
+      payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ??
+      payload['role'];
 
-  const rawSub =
-    payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] ??
-    payload['sub'] ??
-    payload['id'];
+    const rawSub =
+      payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] ??
+      payload['sub'] ??
+      payload['id'];
 
-  // Explicit student ID claim or fallback
-  const rawStudentId = payload['studentId'] ?? payload['StudentId'] ?? rawSub;
+    const rawStudentId = payload['studentId'] ?? payload['StudentId'] ?? rawSub;
 
-  const parsedStudentId = parseInt(rawStudentId, 10);
-  const validStudentId = !isNaN(parsedStudentId) && parsedStudentId > 0 ? parsedStudentId : 1;
+    const parsedStudentId = parseInt(rawStudentId, 10);
+    const validStudentId = !isNaN(parsedStudentId) && parsedStudentId > 0 ? parsedStudentId : 1;
 
-  const roles: string[] = Array.isArray(roleClaim)
-    ? roleClaim
-    : roleClaim
-    ? [roleClaim]
-    : ['Student'];
+    const roles: string[] = Array.isArray(roleClaim)
+      ? roleClaim
+      : roleClaim
+      ? [roleClaim]
+      : ['Student'];
 
-  return {
-    id: rawSub ?? 1,
-    studentId: validStudentId,
-    email:
-      payload['email'] ??
-      payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] ??
-      '',
-    displayName:
-      payload['FirstName'] ?? payload['displayName'] ?? payload['email'] ?? 'Student',
-    role: roles,
-  };
-}
+    return {
+      id: rawSub ?? 1,
+      studentId: validStudentId,
+      email:
+        payload['email'] ??
+        payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] ??
+        '',
+      displayName:
+        payload['FirstName'] ?? payload['displayName'] ?? payload['email'] ?? 'Student',
+      role: roles,
+    };
+  }
 
   private decodePayload(token: string): Record<string, any> {
     const encodedPayload = token.split('.')[1];

@@ -3,12 +3,11 @@ import { Login } from './components/login/login';
 import { authGuard } from './guards/auth.guard';
 import { roleGuard } from './guards/role.guard';
 import { Unauthorized } from './components/unauthorized/unauthorized';
+import { Register } from './features/register/register';
 
 export const routes: Routes = [
-  {
-    path: 'login',
-    component: Login
-  },
+  { path: 'login', component: Login },
+  { path: 'register', component: Register },
   {
     path: 'student-dashboard',
     canActivate: [authGuard],

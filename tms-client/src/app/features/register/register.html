@@ -1,0 +1,191 @@
+<div class="login-page">
+
+  <!-- ==========================================
+       BRAND PANEL
+       ========================================== -->
+  <section class="brand-panel">
+    <div class="brand-content">
+      <!-- Logo -->
+      <div class="brand-logo">
+        <div class="logo-icon">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <div>
+          <div class="brand-name">TMS</div>
+          <div class="brand-subtitle">Training Management System</div>
+        </div>
+      </div>
+
+      <!-- Hero -->
+      <div class="hero-content">
+        <div class="eyebrow">
+          <span class="eyebrow-dot"></span>
+          JOIN THE PLATFORM
+        </div>
+
+        <h1>Start your <span>journey.</span></h1>
+
+        <p>
+          Create your account today to access thousands of courses, track your learning progress, and earn verifiable certifications.
+        </p>
+      </div>
+
+      <!-- Features -->
+      <div class="feature-list">
+        <div class="feature">
+          <div class="feature-icon">✓</div>
+          <div>
+            <strong>Instant Portal Access</strong>
+            <span>Get immediate access to course materials and active enrollments</span>
+          </div>
+        </div>
+
+        <div class="feature">
+          <div class="feature-icon">✓</div>
+          <div>
+            <strong>Role-Based Dashboards</strong>
+            <span>Custom tailored experience whether you are a Student or Instructor</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="brand-footer">© 2026 TMS. All rights reserved.</div>
+    </div>
+
+    <div class="orb orb-one"></div>
+    <div class="orb orb-two"></div>
+    <div class="grid-pattern"></div>
+  </section>
+
+
+  <!-- ==========================================
+       REGISTER PANEL
+       ========================================== -->
+  <main class="login-panel">
+    <div class="login-card">
+
+      <!-- Header -->
+      <div class="login-header">
+        <div class="welcome-badge">🚀</div>
+        <h2>Create Account</h2>
+        <p>Fill in your details below to get started.</p>
+      </div>
+
+      <!-- Error Banner -->
+      @if (errorMessage()) {
+        <div class="error-banner" role="alert">
+          <div class="error-icon">!</div>
+          <div>
+            <strong>Registration failed</strong>
+            <span>{{ errorMessage() }}</span>
+          </div>
+        </div>
+      }
+
+      <!-- Form -->
+      <form #regForm="ngForm" (ngSubmit)="onSubmit()" novalidate>
+
+        <!-- Full Name -->
+        <div class="form-group">
+          <label for="fullName">Full Name</label>
+          <div class="input-wrapper">
+            <input
+              id="fullName"
+              type="text"
+              name="fullName"
+              [(ngModel)]="fullName"
+              required
+              placeholder="e.g. Alex Johnson"
+            />
+          </div>
+        </div>
+
+        <!-- Email address -->
+        <div class="form-group">
+          <label for="email">Email address</label>
+          <div class="input-wrapper">
+            <input
+              id="email"
+              type="email"
+              name="email"
+              [(ngModel)]="email"
+              required
+              placeholder="you@example.com"
+            />
+          </div>
+        </div>
+
+        <!-- Role Selector -->
+        <div class="form-group">
+          <label for="role">Account Type</label>
+          <div class="input-wrapper">
+            <select id="role" name="role" [(ngModel)]="role">
+              <option value="Student">Student</option>
+              <option value="Instructor">Instructor</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="input-wrapper">
+            <input
+              id="password"
+              [type]="showPassword() ? 'text' : 'password'"
+              name="password"
+              [(ngModel)]="password"
+              required
+              placeholder="Create password"
+            />
+          </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <div class="input-wrapper">
+            <input
+              id="confirmPassword"
+              [type]="showPassword() ? 'text' : 'password'"
+              name="confirmPassword"
+              [(ngModel)]="confirmPassword"
+              required
+              placeholder="Repeat password"
+            />
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          class="login-button"
+          type="submit"
+          [disabled]="loading() || regForm.invalid"
+        >
+          @if (loading()) {
+            <span class="spinner"></span>
+            <span>Creating account...</span>
+          } @else {
+            <span>Create Account</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14" />
+              <path d="m13 6 6 6-6 6" />
+            </svg>
+          }
+        </button>
+
+      </form>
+
+      <!-- Already registered link -->
+      <div class="auth-redirect" style="margin-top: 1.5rem; text-align: center;">
+        <span>Already have an account?</span>
+        <a routerLink="/login" class="redirect-link" style="margin-left: 0.5rem; color: #3b82f6; font-weight: 600; text-decoration: none;">Sign in</a>
+      </div>
+
+    </div>
+  </main>
+
+</div>

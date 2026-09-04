@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using TmsApi.Application.DTOs;
 using TmsApi.Application.Interfaces;
+using System.Security.Claims;
 
 namespace TmsApi.Api.Controllers.V1;
 
@@ -12,12 +13,32 @@ namespace TmsApi.Api.Controllers.V1;
 public class EnrollmentsController(IEnrollmentService enrollmentService) : ControllerBase
 {
     [HttpGet]
-    [ProducesResponseType(typeof(List<EnrollmentResponseDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAllEnrollments(CancellationToken ct)
+[ProducesResponseType(typeof(List<EnrollmentResponseDto>), StatusCodes.Status200OK)]public async Task<IActionResult> GetAllEnrollments(CancellationToken ct)
+{
+    // Extract user ID/NameIdentifier claim from the JWT token
+var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+                      ?? User.FindFirst("sub")?.Value;
+
+    if (int.TryParse(userIdClaim, out var studentId))
     {
-        var result = await enrollmentService.GetAllAsync(ct);
-        return Ok(result);
+        // Fetch and map enrollments specifically for this student
+        var enrollments = await enrollmentService.GetByStudentIdAsync(studentId, ct);
+        
+        var responseDtos = enrollments.Select(e => new EnrollmentResponseDto(
+    e.Id,
+    e.CourseId,
+    e.StudentId,
+    e.EnrolledAt,
+    e.Status.ToString()
+)).ToList();
+
+        return Ok(responseDtos);
     }
+
+    // Fallback for non-student roles
+    var result = await enrollmentService.GetAllAsync(ct);
+    return Ok(result);
+}
 
     [HttpPost("/api/v{version:apiVersion}/courses/{courseId:int}/enrollments")]
     [ProducesResponseType(typeof(EnrollmentResponseDto), StatusCodes.Status201Created)]

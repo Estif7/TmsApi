@@ -3,7 +3,7 @@ Yes. The problem is most likely the **image filenames in the README don't match 
 Since your images are in the **same directory as `README.md`**, the cleanest approach is to use simple relative paths:
 
 ```markdown
-![Login Portal](Macbook-Air-localhost-0.png)
+![Login Portal](./Macbook-Air-localhost-0.png)
 ```
 
 rather than the old `.jpg` filenames.
@@ -96,11 +96,11 @@ Built with **ASP.NET Core Web API** and **Angular 19**, the platform provides a 
 
 ### Login Portal
 
-![TMS Login Portal](Macbook-Air-localhost-0.png)
+![TMS Login Portal](./Macbook-Air-localhost-0.png)
 
 ### Registration Portal
 
-![TMS Registration Portal](Macbook-Air-localhost-1.png)
+![TMS Registration Portal](./Macbook-Air-localhost-1.png)
 
 ---
 
